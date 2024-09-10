@@ -22,6 +22,8 @@ type test struct {
 	arch    string
 	version string
 	url     string
+	// Optional fields
+	binary string
 }
 
 func getTool(name string, tools []Tool) *Tool {
@@ -33,6 +35,23 @@ func getTool(name string, tools []Tool) *Tool {
 		}
 	}
 	return tool
+}
+
+func Test_MakeSureNoDuplicates(t *testing.T) {
+	count := map[string]int{}
+	tools := MakeTools()
+	dupes := []string{}
+
+	for _, tool := range tools {
+		count[tool.Name]++
+
+		if count[tool.Name] > 1 {
+			dupes = append(dupes, tool.Name)
+		}
+	}
+	if len(dupes) > 0 {
+		t.Fatalf("Duplicate tools found which will break get-arkade GitHub Action: %v", dupes)
+	}
 }
 
 func Test_MakeSureToolsAreSorted(t *testing.T) {
@@ -82,12 +101,12 @@ func Test_MakeSureToolsAreSorted(t *testing.T) {
 func Test_PostInstallationMsg(t *testing.T) {
 
 	testCases := []struct {
-		dlMode          int
-		localToolsStore []ToolLocal
-		want            string
+		defaultDownloadDir string
+		localToolsStore    []ToolLocal
+		want               string
 	}{
 		{
-			dlMode: 1,
+			defaultDownloadDir: "",
 			localToolsStore: []ToolLocal{
 				{Name: "yq",
 					Path: "/home/user/.arkade/bin/yq",
@@ -108,31 +127,30 @@ sudo mv /home/user/.arkade/bin/yq /usr/local/bin/
 sudo mv /home/user/.arkade/bin/jq /usr/local/bin/`,
 		},
 		{
-			dlMode: 0,
+			defaultDownloadDir: "/tmp/bin/",
 			localToolsStore: []ToolLocal{
 				{Name: "yq",
-					Path: "/tmp/yq_linux_amd64",
+					Path: "/tmp/bin/yq_linux_amd64",
 				},
 				{
 					Name: "jq",
-					Path: "/tmp/jq-linux64",
+					Path: "/tmp/bin/jq-linux64",
 				}},
 			want: `Run the following to copy to install the tool:
-
-chmod +x /tmp/yq_linux_amd64 /tmp/jq-linux64 
-sudo install -m 755 /tmp/yq_linux_amd64 /usr/local/bin/yq
-sudo install -m 755 /tmp/jq-linux64 /usr/local/bin/jq`,
+sudo install -m 755 /tmp/bin/yq_linux_amd64 /usr/local/bin/yq
+sudo install -m 755 /tmp/bin/jq-linux64 /usr/local/bin/jq`,
 		},
 	}
 
 	for _, tt := range testCases {
 		t.Run(tt.localToolsStore[0].Name, func(t *testing.T) {
-			msg, _ := PostInstallationMsg(tt.dlMode, tt.localToolsStore)
+			defaultDownloadDir := tt.defaultDownloadDir
+			msg, _ := PostInstallationMsg(defaultDownloadDir, tt.localToolsStore)
 
-			got := fmt.Sprintf("%s", msg)
+			got := string(msg)
 
 			if got != tt.want {
-				t.Errorf("got %q, want %q", got, tt.want)
+				t.Errorf("got\n%s\n\nwant\n%s", got, tt.want)
 			}
 		})
 	}
@@ -140,7 +158,7 @@ sudo install -m 755 /tmp/jq-linux64 /usr/local/bin/jq`,
 
 func Test_GetDownloadURLs(t *testing.T) {
 	tools := MakeTools()
-	kubectlVersion := "v1.24.2"
+	kubectlVersion := "v1.26.2"
 
 	tests := []struct {
 		name    string
@@ -193,8 +211,8 @@ func Test_GetDownloadURLs(t *testing.T) {
 		},
 		{
 			name:    "terraform",
-			url:     "https://releases.hashicorp.com/terraform/1.1.7/terraform_1.1.7_linux_amd64.zip",
-			version: "1.1.7",
+			url:     "https://releases.hashicorp.com/terraform/1.3.9/terraform_1.3.9_linux_amd64.zip",
+			version: "1.3.9",
 			os:      "linux",
 			arch:    "x86_64",
 		},
@@ -224,13 +242,7 @@ func Test_DownloadArkade(t *testing.T) {
 	tools := MakeTools()
 	name := "arkade"
 
-	var tool *Tool
-	for _, target := range tools {
-		if name == target.Name {
-			tool = &target
-			break
-		}
-	}
+	tool := getTool(name, tools)
 
 	tests := []test{
 		{os: "mingw64_nt-10.0-18362",
@@ -277,13 +289,7 @@ func Test_Download_RunJob(t *testing.T) {
 	tools := MakeTools()
 	name := "run-job"
 
-	var tool *Tool
-	for _, target := range tools {
-		if name == target.Name {
-			tool = &target
-			break
-		}
-	}
+	tool := getTool(name, tools)
 
 	tests := []test{
 		{os: "mingw64_nt-10.0-18362",
@@ -330,13 +336,7 @@ func Test_Download_ActuatedCLI(t *testing.T) {
 	tools := MakeTools()
 	name := "actuated-cli"
 
-	var tool *Tool
-	for _, target := range tools {
-		if name == target.Name {
-			tool = &target
-			break
-		}
-	}
+	tool := getTool(name, tools)
 
 	tests := []test{
 		{os: "mingw64_nt-10.0-18362",
@@ -371,13 +371,7 @@ func Test_Download_mixctl(t *testing.T) {
 	tools := MakeTools()
 	name := "mixctl"
 
-	var tool *Tool
-	for _, target := range tools {
-		if name == target.Name {
-			tool = &target
-			break
-		}
-	}
+	tool := getTool(name, tools)
 
 	tests := []test{
 		{os: "mingw64_nt-10.0-18362",
@@ -424,13 +418,7 @@ func Test_DownloadKubectl(t *testing.T) {
 	tools := MakeTools()
 	name := "kubectl"
 
-	var tool *Tool
-	for _, target := range tools {
-		if name == target.Name {
-			tool = &target
-			break
-		}
-	}
+	tool := getTool(name, tools)
 
 	tests := []test{
 		{os: "darwin",
@@ -465,13 +453,7 @@ func Test_DownloadKubectl(t *testing.T) {
 func Test_DownloadKubectx(t *testing.T) {
 	tools := MakeTools()
 	name := "kubectx"
-	var tool *Tool
-	for _, target := range tools {
-		if name == target.Name {
-			tool = &target
-			break
-		}
-	}
+	tool := getTool(name, tools)
 
 	got, err := tool.GetURL("linux", arch64bit, "v0.9.4", false)
 	if err != nil {
@@ -486,19 +468,13 @@ func Test_DownloadKubectx(t *testing.T) {
 func Test_DownloadKubens(t *testing.T) {
 	tools := MakeTools()
 	name := "kubens"
-	var tool *Tool
-	for _, target := range tools {
-		if name == target.Name {
-			tool = &target
-			break
-		}
-	}
+	tool := getTool(name, tools)
 
 	got, err := tool.GetURL("linux", arch64bit, tool.Version, false)
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := "https://github.com/ahmetb/kubectx/releases/download/v0.9.1/kubens"
+	want := "https://github.com/ahmetb/kubectx/releases/download/v0.9.5/kubens"
 	if got != want {
 		t.Fatalf("want: %s, got: %s", want, got)
 	}
@@ -508,13 +484,7 @@ func Test_DownloadKubeseal(t *testing.T) {
 	tools := MakeTools()
 	name := "kubeseal"
 
-	var tool *Tool
-	for _, target := range tools {
-		if name == target.Name {
-			tool = &target
-			break
-		}
-	}
+	tool := getTool(name, tools)
 
 	tests := []test{
 		{os: "mingw64_nt-10.0-18362",
@@ -557,13 +527,7 @@ func Test_DownloadKind(t *testing.T) {
 	tools := MakeTools()
 	name := "kind"
 
-	var tool *Tool
-	for _, target := range tools {
-		if name == target.Name {
-			tool = &target
-			break
-		}
-	}
+	tool := getTool(name, tools)
 
 	tests := []test{
 		{os: "mingw64_nt-10.0-18362",
@@ -606,13 +570,7 @@ func Test_DownloadK3d(t *testing.T) {
 	tools := MakeTools()
 	name := "k3d"
 
-	var tool *Tool
-	for _, target := range tools {
-		if name == target.Name {
-			tool = &target
-			break
-		}
-	}
+	tool := getTool(name, tools)
 
 	tests := []test{
 		{os: "mingw64_nt-10.0-18362",
@@ -651,13 +609,7 @@ func Test_DownloadK3s(t *testing.T) {
 	tools := MakeTools()
 	name := "k3s"
 
-	var tool *Tool
-	for _, target := range tools {
-		if name == target.Name {
-			tool = &target
-			break
-		}
-	}
+	tool := getTool(name, tools)
 
 	tests := []test{
 		{os: "linux",
@@ -680,17 +632,38 @@ func Test_DownloadK3s(t *testing.T) {
 	}
 }
 
+func Test_DownloadK0s(t *testing.T) {
+	tools := MakeTools()
+	name := "k0s"
+
+	tool := getTool(name, tools)
+
+	tests := []test{
+		{os: "linux",
+			arch:    arch64bit,
+			version: "v1.27.4+k0s.0",
+			url:     "https://github.com/k0sproject/k0s/releases/download/v1.27.4+k0s.0/k0s-v1.27.4+k0s.0-amd64"},
+		{os: "linux",
+			arch:    "aarch64",
+			version: "v1.27.4+k0s.0",
+			url:     "https://github.com/k0sproject/k0s/releases/download/v1.27.4+k0s.0/k0s-v1.27.4+k0s.0-arm64"},
+	}
+	for _, tc := range tests {
+		got, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got != tc.url {
+			t.Fatalf("want:\n%q, got:\n%q", tc.url, got)
+		}
+	}
+}
+
 func Test_DownloadDevspace(t *testing.T) {
 	tools := MakeTools()
 	name := "devspace"
 
-	var tool *Tool
-	for _, target := range tools {
-		if name == target.Name {
-			tool = &target
-			break
-		}
-	}
+	tool := getTool(name, tools)
 
 	tests := []test{
 		{os: "mingw64_nt-10.0-18362",
@@ -729,13 +702,7 @@ func Test_DownloadTilt(t *testing.T) {
 	tools := MakeTools()
 	name := "tilt"
 
-	var tool *Tool
-	for _, target := range tools {
-		if name == target.Name {
-			tool = &target
-			break
-		}
-	}
+	tool := getTool(name, tools)
 
 	tests := []test{
 		{os: "mingw64_nt-10.0-18362",
@@ -774,13 +741,7 @@ func Test_DownloadK3sup(t *testing.T) {
 	tools := MakeTools()
 	name := "k3sup"
 
-	var tool *Tool
-	for _, target := range tools {
-		if name == target.Name {
-			tool = &target
-			break
-		}
-	}
+	tool := getTool(name, tools)
 
 	tests := []test{
 		{os: "mingw64_nt-10.0-18362",
@@ -818,13 +779,7 @@ func Test_DownloadAutok3s(t *testing.T) {
 	tools := MakeTools()
 	name := "autok3s"
 
-	var tool *Tool
-	for _, target := range tools {
-		if name == target.Name {
-			tool = &target
-			break
-		}
-	}
+	tool := getTool(name, tools)
 
 	tests := []test{
 		{os: "mingw64_nt-10.0-18362",
@@ -863,43 +818,44 @@ func Test_DownloadInletsctl(t *testing.T) {
 	tools := MakeTools()
 	name := "inletsctl"
 
-	var tool *Tool
-	for _, target := range tools {
-		if name == target.Name {
-			tool = &target
-			break
-		}
-	}
+	tool := getTool(name, tools)
 
 	tests := []test{
 		{os: "mingw64_nt-10.0-18362",
 			arch:    arch64bit,
 			version: "0.8.16",
-			url:     "https://github.com/inlets/inletsctl/releases/download/0.8.16/inletsctl.exe.tgz"},
+			url:     "https://github.com/inlets/inletsctl/releases/download/0.8.16/inletsctl.exe.tgz",
+			binary:  "inletsctl"},
 		{os: "darwin",
 			arch:    arch64bit,
 			version: "0.8.16",
-			url:     "https://github.com/inlets/inletsctl/releases/download/0.8.16/inletsctl-darwin.tgz"},
+			url:     "https://github.com/inlets/inletsctl/releases/download/0.8.16/inletsctl-darwin.tgz",
+			binary:  "inletsctl-darwin"},
 		{os: "darwin",
 			arch:    archDarwinARM64,
 			version: "0.8.16",
-			url:     "https://github.com/inlets/inletsctl/releases/download/0.8.16/inletsctl-darwin-arm64.tgz"},
+			url:     "https://github.com/inlets/inletsctl/releases/download/0.8.16/inletsctl-darwin-arm64.tgz",
+			binary:  "inletsctl-darwin-arm64"},
 		{os: "linux",
 			arch:    arch64bit,
 			version: "0.8.16",
-			url:     "https://github.com/inlets/inletsctl/releases/download/0.8.16/inletsctl.tgz"},
+			url:     "https://github.com/inlets/inletsctl/releases/download/0.8.16/inletsctl.tgz",
+			binary:  "inletsctl"},
 		{os: "linux",
 			arch:    "armv6l",
 			version: "0.8.16",
-			url:     "https://github.com/inlets/inletsctl/releases/download/0.8.16/inletsctl-armhf.tgz"},
+			url:     "https://github.com/inlets/inletsctl/releases/download/0.8.16/inletsctl-armhf.tgz",
+			binary:  "inletsctl-armhf"},
 		{os: "linux",
 			arch:    "armv7l",
 			version: "0.8.16",
-			url:     "https://github.com/inlets/inletsctl/releases/download/0.8.16/inletsctl-armhf.tgz"},
+			url:     "https://github.com/inlets/inletsctl/releases/download/0.8.16/inletsctl-armhf.tgz",
+			binary:  "inletsctl-armhf"},
 		{os: "linux",
 			arch:    archARM64,
 			version: "0.8.16",
-			url:     "https://github.com/inlets/inletsctl/releases/download/0.8.16/inletsctl-arm64.tgz"},
+			url:     "https://github.com/inlets/inletsctl/releases/download/0.8.16/inletsctl-arm64.tgz",
+			binary:  "inletsctl-arm64"},
 	}
 	for _, tc := range tests {
 		got, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
@@ -907,7 +863,14 @@ func Test_DownloadInletsctl(t *testing.T) {
 			t.Fatal(err)
 		}
 		if got != tc.url {
-			t.Fatalf("want: %s, got: %s", tc.url, got)
+			t.Errorf("for %s/%s, want: %q, but got: %q", tc.os, tc.arch, tc.url, got)
+		}
+		binary, err := GetBinaryName(tool, tc.os, tc.arch, tc.version)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if binary != tc.binary {
+			t.Errorf("for %s/%s, want: %q, but got: %q", tc.os, tc.arch, tc.binary, binary)
 		}
 	}
 }
@@ -916,13 +879,7 @@ func Test_DownloadKubebuilder(t *testing.T) {
 	tools := MakeTools()
 	name := "kubebuilder"
 
-	var tool *Tool
-	for _, target := range tools {
-		if name == target.Name {
-			tool = &target
-			break
-		}
-	}
+	tool := getTool(name, tools)
 
 	tests := []test{
 		{os: "darwin",
@@ -954,31 +911,31 @@ func Test_DownloadKustomize(t *testing.T) {
 	tools := MakeTools()
 	name := "kustomize"
 
-	var tool *Tool
-	for _, target := range tools {
-		if name == target.Name {
-			tool = &target
-			break
-		}
-	}
+	tool := getTool(name, tools)
 
-	ver := "4.4.1"
+	ver := "v5.0.3"
 
 	tests := []test{
 		{os: "linux",
 			arch:    arch64bit,
 			version: ver,
-			url:     "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv4.4.1/kustomize_v4.4.1_linux_amd64.tar.gz",
+			url:     "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.0.3/kustomize_v5.0.3_linux_amd64.tar.gz",
 		},
 		{os: "darwin",
 			arch:    arch64bit,
 			version: ver,
-			url:     "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv4.4.1/kustomize_v4.4.1_darwin_amd64.tar.gz",
+			url:     "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.0.3/kustomize_v5.0.3_darwin_amd64.tar.gz",
 		},
 		{os: "linux",
 			arch:    archARM64,
 			version: ver,
-			url:     "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv4.4.1/kustomize_v4.4.1_linux_arm64.tar.gz",
+			url:     "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.0.3/kustomize_v5.0.3_linux_arm64.tar.gz",
+		},
+		{os: "mingw64_nt-10.0-18362",
+
+			arch:    arch64bit,
+			version: ver,
+			url:     "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.0.3/kustomize_v5.0.3_windows_amd64.tar.gz",
 		},
 	}
 
@@ -999,13 +956,7 @@ func Test_DownloadCrane(t *testing.T) {
 
 	const toolVersion = "v0.11.0"
 
-	var tool *Tool
-	for _, target := range tools {
-		if name == target.Name {
-			tool = &target
-			break
-		}
-	}
+	tool := getTool(name, tools)
 
 	tests := []test{
 		{os: "mingw64_nt-10.0-18362",
@@ -1093,27 +1044,27 @@ func Test_DownloadEKSCTL(t *testing.T) {
 		{os: "mingw64_nt-10.0-18362",
 			arch:    arch64bit,
 			version: toolVersion,
-			url:     "https://github.com/weaveworks/eksctl/releases/download/v0.79.0/eksctl_Windows_amd64.zip"},
+			url:     "https://github.com/eksctl-io/eksctl/releases/download/v0.79.0/eksctl_Windows_amd64.zip"},
 		{os: "linux",
 			arch:    arch64bit,
 			version: toolVersion,
-			url:     "https://github.com/weaveworks/eksctl/releases/download/v0.79.0/eksctl_Linux_amd64.tar.gz"},
+			url:     "https://github.com/eksctl-io/eksctl/releases/download/v0.79.0/eksctl_Linux_amd64.tar.gz"},
 		{os: "linux",
 			arch:    archARM64,
 			version: toolVersion,
-			url:     "https://github.com/weaveworks/eksctl/releases/download/v0.79.0/eksctl_Linux_arm64.tar.gz"},
+			url:     "https://github.com/eksctl-io/eksctl/releases/download/v0.79.0/eksctl_Linux_arm64.tar.gz"},
 		{os: "darwin",
 			arch:    archDarwinARM64,
 			version: toolVersion,
-			url:     "https://github.com/weaveworks/eksctl/releases/download/v0.79.0/eksctl_Darwin_arm64.tar.gz"},
+			url:     "https://github.com/eksctl-io/eksctl/releases/download/v0.79.0/eksctl_Darwin_arm64.tar.gz"},
 		{os: "darwin",
 			arch:    arch64bit,
 			version: toolVersion,
-			url:     "https://github.com/weaveworks/eksctl/releases/download/v0.79.0/eksctl_Darwin_amd64.tar.gz"},
+			url:     "https://github.com/eksctl-io/eksctl/releases/download/v0.79.0/eksctl_Darwin_amd64.tar.gz"},
 		{os: "linux",
 			arch:    archARM7,
 			version: toolVersion,
-			url:     "https://github.com/weaveworks/eksctl/releases/download/v0.79.0/eksctl_Linux_armv7.tar.gz"},
+			url:     "https://github.com/eksctl-io/eksctl/releases/download/v0.79.0/eksctl_Linux_armv7.tar.gz"},
 	}
 
 	for _, tc := range tests {
@@ -1195,6 +1146,58 @@ func Test_DownloadK9s(t *testing.T) {
 			arch:    archARM7,
 			version: toolVersion,
 			url:     `https://github.com/derailed/k9s/releases/download/v0.24.10/k9s_Linux_arm.tar.gz`,
+		},
+	}
+
+	for _, tc := range tests {
+		got, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got != tc.url {
+			t.Errorf("want: %s, got: %s", tc.url, got)
+		}
+	}
+}
+
+func Test_DownloadEtcd(t *testing.T) {
+	tools := MakeTools()
+	name := "etcd"
+
+	tool := getTool(name, tools)
+
+	const toolVersion = "v3.5.9"
+
+	tests := []test{
+		{
+			os:      "linux",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     `https://github.com/etcd-io/etcd/releases/download/v3.5.9/etcd-v3.5.9-linux-amd64.tar.gz`,
+		},
+		{
+			os:      "darwin",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     `https://github.com/etcd-io/etcd/releases/download/v3.5.9/etcd-v3.5.9-darwin-amd64.zip`,
+		},
+		{
+			os:      "darwin",
+			arch:    archDarwinARM64,
+			version: toolVersion,
+			url:     `https://github.com/etcd-io/etcd/releases/download/v3.5.9/etcd-v3.5.9-darwin-arm64.zip`,
+		},
+		{
+			os:      "linux",
+			arch:    archARM64,
+			version: toolVersion,
+			url:     `https://github.com/etcd-io/etcd/releases/download/v3.5.9/etcd-v3.5.9-linux-arm64.tar.gz`,
+		},
+		{
+			os:      "ming",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     `https://github.com/etcd-io/etcd/releases/download/v3.5.9/etcd-v3.5.9-windows-amd64.zip`,
 		},
 	}
 
@@ -1304,41 +1307,41 @@ func Test_DownloadTerraform(t *testing.T) {
 
 	tool := getTool(name, tools)
 
-	const toolVersion = "1.1.7"
+	const toolVersion = "1.3.9"
 
 	tests := []test{
 		{
 			os:      "mingw64_nt-10.0-18362",
 			arch:    arch64bit,
 			version: toolVersion,
-			url:     `https://releases.hashicorp.com/terraform/1.1.7/terraform_1.1.7_windows_amd64.zip`,
+			url:     `https://releases.hashicorp.com/terraform/1.3.9/terraform_1.3.9_windows_amd64.zip`,
 		},
 		{
-			url:     "https://releases.hashicorp.com/terraform/1.1.7/terraform_1.1.7_linux_amd64.zip",
+			url:     "https://releases.hashicorp.com/terraform/1.3.9/terraform_1.3.9_linux_amd64.zip",
 			version: toolVersion,
 			os:      "linux",
 			arch:    arch64bit,
 		},
 		{
-			url:     "https://releases.hashicorp.com/terraform/1.1.7/terraform_1.1.7_linux_arm.zip",
+			url:     "https://releases.hashicorp.com/terraform/1.3.9/terraform_1.3.9_linux_arm.zip",
 			version: toolVersion,
 			os:      "linux",
 			arch:    archARM7,
 		},
 		{
-			url:     "https://releases.hashicorp.com/terraform/1.1.7/terraform_1.1.7_linux_arm64.zip",
+			url:     "https://releases.hashicorp.com/terraform/1.3.9/terraform_1.3.9_linux_arm64.zip",
 			version: toolVersion,
 			os:      "linux",
 			arch:    archARM64,
 		},
 		{
-			url:     "https://releases.hashicorp.com/terraform/1.1.7/terraform_1.1.7_darwin_arm64.zip",
+			url:     "https://releases.hashicorp.com/terraform/1.3.9/terraform_1.3.9_darwin_arm64.zip",
 			version: toolVersion,
 			os:      "darwin",
 			arch:    archDarwinARM64,
 		},
 		{
-			url:     "https://releases.hashicorp.com/terraform/1.1.7/terraform_1.1.7_darwin_amd64.zip",
+			url:     "https://releases.hashicorp.com/terraform/1.3.9/terraform_1.3.9_darwin_amd64.zip",
 			version: toolVersion,
 			os:      "darwin",
 			arch:    arch64bit,
@@ -1862,13 +1865,7 @@ func Test_DownloadLinkerd(t *testing.T) {
 	tools := MakeTools()
 	name := "linkerd2"
 
-	var tool *Tool
-	for _, target := range tools {
-		if name == target.Name {
-			tool = &target
-			break
-		}
-	}
+	tool := getTool(name, tools)
 
 	tests := []test{
 		{os: "mingw64_nt-10.0-18362",
@@ -1904,13 +1901,7 @@ func Test_DownloadArgocd(t *testing.T) {
 	name := "argocd"
 	version := "v2.4.14"
 
-	var tool *Tool
-	for _, target := range tools {
-		if name == target.Name {
-			tool = &target
-			break
-		}
-	}
+	tool := getTool(name, tools)
 
 	tests := []test{
 		{
@@ -1953,13 +1944,7 @@ func Test_DownloadNerdctl(t *testing.T) {
 	tools := MakeTools()
 	name := "nerdctl"
 
-	var tool *Tool
-	for _, target := range tools {
-		if name == target.Name {
-			tool = &target
-			break
-		}
-	}
+	tool := getTool(name, tools)
 
 	tests := []test{
 		{os: "linux",
@@ -2495,7 +2480,7 @@ func Test_DownloadHelm(t *testing.T) {
 			os:      "darwin",
 			arch:    archARM64,
 			version: "3.5.4",
-			url:     `https://get.helm.sh/helm-3.5.4-darwin-amd64.tar.gz`,
+			url:     `https://get.helm.sh/helm-3.5.4-darwin-arm64.tar.gz`,
 		},
 	}
 
@@ -3411,13 +3396,7 @@ func Test_DownloadKubeBench(t *testing.T) {
 	tools := MakeTools()
 	name := "kube-bench"
 
-	var tool *Tool
-	for _, target := range tools {
-		if name == target.Name {
-			tool = &target
-			break
-		}
-	}
+	tool := getTool(name, tools)
 
 	tests := []test{
 		{
@@ -3449,13 +3428,7 @@ func Test_DownloadClusterctl(t *testing.T) {
 	tools := MakeTools()
 	name := "clusterctl"
 
-	var tool *Tool
-	for _, target := range tools {
-		if name == target.Name {
-			tool = &target
-			break
-		}
-	}
+	tool := getTool(name, tools)
 
 	tests := []test{
 		{
@@ -3482,6 +3455,12 @@ func Test_DownloadClusterctl(t *testing.T) {
 			version: "v1.0.0",
 			url:     "https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.0.0/clusterctl-darwin-arm64",
 		},
+		{
+			os:      "ming",
+			arch:    arch64bit,
+			version: "v1.0.0",
+			url:     `https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.0.0/clusterctl-windows-amd64.exe`,
+		},
 	}
 
 	for _, tc := range tests {
@@ -3499,13 +3478,7 @@ func Test_DownloadvCluster(t *testing.T) {
 	tools := MakeTools()
 	name := "vcluster"
 
-	var tool *Tool
-	for _, target := range tools {
-		if name == target.Name {
-			tool = &target
-			break
-		}
-	}
+	tool := getTool(name, tools)
 
 	tests := []test{
 		{
@@ -3556,13 +3529,7 @@ func Test_DownloadHostcl(t *testing.T) {
 	name := "hostctl"
 	version := "v1.1.3"
 
-	var tool *Tool
-	for _, target := range tools {
-		if name == target.Name {
-			tool = &target
-			break
-		}
-	}
+	tool := getTool(name, tools)
 
 	tests := []test{
 		{
@@ -3719,44 +3686,38 @@ func Test_DownloadSOPS(t *testing.T) {
 	name := "sops"
 	version := "v3.7.2"
 
-	var tool *Tool
-	for _, target := range tools {
-		if name == target.Name {
-			tool = &target
-			break
-		}
-	}
+	tool := getTool(name, tools)
 
 	tests := []test{
 		{
 			os:      "linux",
 			arch:    arch64bit,
 			version: version,
-			url:     "https://github.com/mozilla/sops/releases/download/v3.7.2/sops-v3.7.2.linux.amd64",
+			url:     "https://github.com/getsops/sops/releases/download/v3.7.2/sops-v3.7.2.linux.amd64",
 		},
 		{
 			os:      "linux",
 			arch:    archARM64,
 			version: version,
-			url:     "https://github.com/mozilla/sops/releases/download/v3.7.2/sops-v3.7.2.linux.arm64",
+			url:     "https://github.com/getsops/sops/releases/download/v3.7.2/sops-v3.7.2.linux.arm64",
 		},
 		{
 			os:      "darwin",
 			arch:    arch64bit,
 			version: version,
-			url:     "https://github.com/mozilla/sops/releases/download/v3.7.2/sops-v3.7.2.darwin.amd64",
+			url:     "https://github.com/getsops/sops/releases/download/v3.7.2/sops-v3.7.2.darwin.amd64",
 		},
 		{
 			os:      "darwin",
 			arch:    archARM64,
 			version: version,
-			url:     "https://github.com/mozilla/sops/releases/download/v3.7.2/sops-v3.7.2.darwin.arm64",
+			url:     "https://github.com/getsops/sops/releases/download/v3.7.2/sops-v3.7.2.darwin.arm64",
 		},
 		{
 			os:      "ming",
 			arch:    arch64bit,
 			version: version,
-			url:     "https://github.com/mozilla/sops/releases/download/v3.7.2/sops-v3.7.2.exe",
+			url:     "https://github.com/getsops/sops/releases/download/v3.7.2/sops-v3.7.2.exe",
 		},
 	}
 
@@ -3775,13 +3736,8 @@ func Test_DownloadDagger(t *testing.T) {
 	tools := MakeTools()
 	name := "dagger"
 
-	var tool *Tool
-	for _, target := range tools {
-		if name == target.Name {
-			tool = &target
-			break
-		}
-	}
+	tool := getTool(name, tools)
+
 	version := "v0.2.4"
 	tests := []test{
 		{
@@ -5249,31 +5205,31 @@ func Test_DownloadViddy(t *testing.T) {
 			os:      "darwin",
 			arch:    arch64bit,
 			version: version,
-			url:     "https://github.com/sachaos/viddy/releases/download/v0.3.6/viddy_0.3.6_Darwin_x86_64.tar.gz",
+			url:     "https://github.com/sachaos/viddy/releases/download/v0.3.6/viddy_Darwin_x86_64.tar.gz",
 		},
 		{
 			os:      "darwin",
 			arch:    archDarwinARM64,
 			version: version,
-			url:     "https://github.com/sachaos/viddy/releases/download/v0.3.6/viddy_0.3.6_Darwin_arm64.tar.gz",
+			url:     "https://github.com/sachaos/viddy/releases/download/v0.3.6/viddy_Darwin_arm64.tar.gz",
 		},
 		{
 			os:      "linux",
 			arch:    arch64bit,
 			version: version,
-			url:     "https://github.com/sachaos/viddy/releases/download/v0.3.6/viddy_0.3.6_Linux_x86_64.tar.gz",
+			url:     "https://github.com/sachaos/viddy/releases/download/v0.3.6/viddy_Linux_x86_64.tar.gz",
 		},
 		{
 			os:      "linux",
 			arch:    archARM64,
 			version: version,
-			url:     "https://github.com/sachaos/viddy/releases/download/v0.3.6/viddy_0.3.6_Linux_arm64.tar.gz",
+			url:     "https://github.com/sachaos/viddy/releases/download/v0.3.6/viddy_Linux_arm64.tar.gz",
 		},
 		{
 			os:      "ming",
 			arch:    arch64bit,
 			version: version,
-			url:     "https://github.com/sachaos/viddy/releases/download/v0.3.6/viddy_0.3.6_Windows_x86_64.tar.gz",
+			url:     "https://github.com/sachaos/viddy/releases/download/v0.3.6/viddy_Windows_x86_64.tar.gz",
 		},
 	}
 
@@ -5974,6 +5930,688 @@ func Test_DownloadCmctl(t *testing.T) {
 			arch:    arch64bit,
 			version: toolVersion,
 			url:     `https://github.com/cert-manager/cert-manager/releases/download/v1.11.0/cmctl-windows-amd64.zip`,
+		},
+	}
+
+	for _, tc := range tests {
+		got, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got != tc.url {
+			t.Errorf("want: %s, got: %s", tc.url, got)
+		}
+	}
+}
+
+func Test_DownloadTimoni(t *testing.T) {
+	tools := MakeTools()
+	name := "timoni"
+
+	tool := getTool(name, tools)
+
+	const toolVersion = "v0.3.0"
+
+	tests := []test{
+		{
+			os:      "ming",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     `https://github.com/stefanprodan/timoni/releases/download/v0.3.0/timoni_0.3.0_windows_amd64.zip`,
+		},
+		{
+			os:      "linux",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     `https://github.com/stefanprodan/timoni/releases/download/v0.3.0/timoni_0.3.0_linux_amd64.tar.gz`,
+		},
+		{
+			os:      "darwin",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     `https://github.com/stefanprodan/timoni/releases/download/v0.3.0/timoni_0.3.0_darwin_amd64.tar.gz`,
+		},
+		{
+			os:      "linux",
+			arch:    archARM64,
+			version: toolVersion,
+			url:     `https://github.com/stefanprodan/timoni/releases/download/v0.3.0/timoni_0.3.0_linux_arm64.tar.gz`,
+		},
+		{
+			os:      "darwin",
+			arch:    archDarwinARM64,
+			version: toolVersion,
+			url:     `https://github.com/stefanprodan/timoni/releases/download/v0.3.0/timoni_0.3.0_darwin_arm64.tar.gz`,
+		},
+		{
+			os:      "linux",
+			arch:    archARM7,
+			version: toolVersion,
+			url:     `https://github.com/stefanprodan/timoni/releases/download/v0.3.0/timoni_0.3.0_linux_armv7l.tar.gz`,
+		},
+	}
+
+	for _, tc := range tests {
+		got, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got != tc.url {
+			t.Errorf("want: %s, got: %s", tc.url, got)
+		}
+	}
+}
+
+func Test_DownloadSeaweedFS(t *testing.T) {
+	tools := MakeTools()
+	name := "seaweedfs"
+
+	tool := getTool(name, tools)
+
+	const toolVersion = "3.45"
+
+	tests := []test{
+		{
+			os:      "linux",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     `https://github.com/seaweedfs/seaweedfs/releases/download/3.45/linux_amd64.tar.gz`,
+		},
+		{
+			os:      "darwin",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     `https://github.com/seaweedfs/seaweedfs/releases/download/3.45/darwin_amd64.tar.gz`,
+		},
+		{
+			os:      "linux",
+			arch:    archARM64,
+			version: toolVersion,
+			url:     `https://github.com/seaweedfs/seaweedfs/releases/download/3.45/linux_arm64.tar.gz`,
+		},
+		{
+			os:      "darwin",
+			arch:    archDarwinARM64,
+			version: toolVersion,
+			url:     `https://github.com/seaweedfs/seaweedfs/releases/download/3.45/darwin_arm64.tar.gz`,
+		},
+		{
+			os:      "linux",
+			arch:    archARM7,
+			version: toolVersion,
+			url:     `https://github.com/seaweedfs/seaweedfs/releases/download/3.45/linux_arm.tar.gz`,
+		},
+	}
+
+	for _, tc := range tests {
+		got, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got != tc.url {
+			t.Errorf("want: %s, got: %s", tc.url, got)
+		}
+	}
+}
+
+func Test_DownloadKyverno(t *testing.T) {
+	tools := MakeTools()
+	name := "kyverno"
+
+	tool := getTool(name, tools)
+
+	const toolVersion = "v1.9.2"
+
+	tests := []test{
+		{
+			os:      "darwin",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     `https://github.com/kyverno/kyverno/releases/download/v1.9.2/kyverno-cli_v1.9.2_darwin_x86_64.tar.gz`,
+		},
+		{
+			os:      "darwin",
+			arch:    archDarwinARM64,
+			version: toolVersion,
+			url:     `https://github.com/kyverno/kyverno/releases/download/v1.9.2/kyverno-cli_v1.9.2_darwin_arm64.tar.gz`,
+		},
+		{
+			os:      "linux",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     `https://github.com/kyverno/kyverno/releases/download/v1.9.2/kyverno-cli_v1.9.2_linux_x86_64.tar.gz`,
+		},
+		{
+			os:      "linux",
+			arch:    archARM64,
+			version: toolVersion,
+			url:     `https://github.com/kyverno/kyverno/releases/download/v1.9.2/kyverno-cli_v1.9.2_linux_arm64.tar.gz`,
+		},
+		{
+			os:      "ming",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     `https://github.com/kyverno/kyverno/releases/download/v1.9.2/kyverno-cli_v1.9.2_windows_x86_64.zip`,
+		},
+	}
+
+	for _, tc := range tests {
+		got, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got != tc.url {
+			t.Errorf("want: %s, got: %s", tc.url, got)
+		}
+	}
+}
+
+func Test_DownloadBuildKit(t *testing.T) {
+	tools := MakeTools()
+	name := "replicated"
+
+	tool := getTool(name, tools)
+
+	const toolVersion = "v0.45.0"
+
+	tests := []test{
+		{
+			os:      "linux",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     `https://github.com/replicatedhq/replicated/releases/download/v0.45.0/replicated_0.45.0_linux_amd64.tar.gz`,
+		},
+		{
+			os:      "darwin",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     `https://github.com/replicatedhq/replicated/releases/download/v0.45.0/replicated_0.45.0_darwin_all.tar.gz`,
+		},
+		{
+			os:      "darwin",
+			arch:    archARM64,
+			version: toolVersion,
+			url:     `https://github.com/replicatedhq/replicated/releases/download/v0.45.0/replicated_0.45.0_darwin_all.tar.gz`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.os+" "+tc.arch+" "+tc.version, func(r *testing.T) {
+			got, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got != tc.url {
+				t.Errorf("want: %s, got: %s", tc.url, got)
+			}
+		})
+	}
+}
+
+func Test_DownloadKtop(t *testing.T) {
+	tools := MakeTools()
+	name := "ktop"
+
+	tool := getTool(name, tools)
+
+	const toolVersion = "v0.3.5"
+
+	tests := []test{
+		{
+			os:      "linux",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     `https://github.com/vladimirvivien/ktop/releases/download/v0.3.5/ktop_v0.3.5_linux_amd64.tar.gz`,
+		},
+		{
+			os:      "darwin",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     `https://github.com/vladimirvivien/ktop/releases/download/v0.3.5/ktop_v0.3.5_darwin_amd64.tar.gz`,
+		},
+		{
+			os:      "linux",
+			arch:    archARM64,
+			version: toolVersion,
+			url:     `https://github.com/vladimirvivien/ktop/releases/download/v0.3.5/ktop_v0.3.5_linux_arm64.tar.gz`,
+		},
+		{
+			os:      "darwin",
+			arch:    archDarwinARM64,
+			version: toolVersion,
+			url:     `https://github.com/vladimirvivien/ktop/releases/download/v0.3.5/ktop_v0.3.5_darwin_arm64.tar.gz`,
+		},
+		{
+			os:      "linux",
+			arch:    archARM7,
+			version: toolVersion,
+			url:     `https://github.com/vladimirvivien/ktop/releases/download/v0.3.5/ktop_v0.3.5_linux_armv7.tar.gz`,
+		},
+	}
+
+	for _, tc := range tests {
+		got, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got != tc.url {
+			t.Errorf("want: %s, got: %s", tc.url, got)
+		}
+	}
+}
+
+func Test_DownloadKubeBurner(t *testing.T) {
+	tools := MakeTools()
+	name := "kube-burner"
+
+	tool := getTool(name, tools)
+
+	const toolVersion = "v1.6"
+
+	tests := []test{
+		{
+			os:      "linux",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     `https://github.com/cloud-bulldozer/kube-burner/releases/download/v1.6/kube-burner-V1.6-Linux-x86_64.tar.gz`,
+		},
+		{
+			os:      "darwin",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     `https://github.com/cloud-bulldozer/kube-burner/releases/download/v1.6/kube-burner-V1.6-Darwin-x86_64.tar.gz`,
+		},
+		{
+			os:      "linux",
+			arch:    archARM64,
+			version: toolVersion,
+			url:     `https://github.com/cloud-bulldozer/kube-burner/releases/download/v1.6/kube-burner-V1.6-Linux-arm64.tar.gz`,
+		},
+		{
+			os:      "darwin",
+			arch:    archDarwinARM64,
+			version: toolVersion,
+			url:     `https://github.com/cloud-bulldozer/kube-burner/releases/download/v1.6/kube-burner-V1.6-Darwin-arm64.tar.gz`,
+		},
+		{
+			os:      "ming",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     `https://github.com/cloud-bulldozer/kube-burner/releases/download/v1.6/kube-burner-V1.6-Windows-x86_64.zip`,
+		},
+	}
+
+	for _, tc := range tests {
+		got, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got != tc.url {
+			t.Errorf("want: %s, got: %s", tc.url, got)
+		}
+	}
+}
+
+func Test_DownloadOpenshiftInstall(t *testing.T) {
+	tools := MakeTools()
+	name := "openshift-install"
+
+	tool := getTool(name, tools)
+
+	const toolVersion = "4.13.1"
+
+	tests := []test{
+		{
+			os:      "linux",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     `https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.13.1/openshift-install-linux.tar.gz`,
+		},
+		{
+			os:      "darwin",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     `https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.13.1/openshift-install-mac.tar.gz`,
+		},
+		{
+			os:      "linux",
+			arch:    archARM64,
+			version: toolVersion,
+			url:     `https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.13.1/openshift-install-linux-arm64.tar.gz`,
+		},
+		{
+			os:      "darwin",
+			arch:    archDarwinARM64,
+			version: toolVersion,
+			url:     `https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.13.1/openshift-install-mac-arm64.tar.gz`,
+		},
+	}
+
+	for _, tc := range tests {
+		got, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got != tc.url {
+			t.Errorf("want: %s, got: %s", tc.url, got)
+		}
+	}
+}
+
+func Test_DownloadOpenshiftCLI(t *testing.T) {
+	tools := MakeTools()
+	name := "oc"
+
+	tool := getTool(name, tools)
+
+	const toolVersion = "4.13.1"
+
+	tests := []test{
+		{
+			os:      "linux",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     `https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.13.1/openshift-client-linux.tar.gz`,
+		},
+		{
+			os:      "darwin",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     `https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.13.1/openshift-client-mac.tar.gz`,
+		},
+		{
+			os:      "linux",
+			arch:    archARM64,
+			version: toolVersion,
+			url:     `https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.13.1/openshift-client-linux-arm64.tar.gz`,
+		},
+		{
+			os:      "darwin",
+			arch:    archDarwinARM64,
+			version: toolVersion,
+			url:     `https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.13.1/openshift-client-mac-arm64.tar.gz`,
+		},
+		{
+			os:      "ming",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     `https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.13.1/openshift-client-windows.zip`,
+		},
+	}
+
+	for _, tc := range tests {
+		got, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got != tc.url {
+			t.Errorf("want: %s, got: %s", tc.url, got)
+		}
+	}
+}
+
+func Test_DownloadAtuin(t *testing.T) {
+	tools := MakeTools()
+	name := "atuin"
+
+	tool := getTool(name, tools)
+
+	const toolVersion = "v15.0.0"
+
+	tests := []test{
+		{
+			os:      "linux",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     `https://github.com/atuinsh/atuin/releases/download/v15.0.0/atuin-v15.0.0-x86_64-unknown-linux-gnu.tar.gz`,
+		},
+		{
+			os:      "darwin",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     `https://github.com/atuinsh/atuin/releases/download/v15.0.0/atuin-v15.0.0-x86_64-apple-darwin.tar.gz`,
+		},
+	}
+
+	for _, tc := range tests {
+		got, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got != tc.url {
+			t.Errorf("want: %s, got: %s", tc.url, got)
+		}
+	}
+
+}
+
+func Test_Copacetic(t *testing.T) {
+	tools := MakeTools()
+	name := "copa"
+
+	tool := getTool(name, tools)
+
+	const toolVersion = "v0.2.0"
+
+	test := test{
+		os:      "linux",
+		arch:    arch64bit,
+		version: toolVersion,
+		url:     `https://github.com/project-copacetic/copacetic/releases/download/v0.2.0/copa_0.2.0_linux_amd64.tar.gz`,
+	}
+
+	t.Run(test.os+" "+test.arch+" "+test.version, func(r *testing.T) {
+		got, err := tool.GetURL(test.os, test.arch, test.version, false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got != test.url {
+			t.Errorf("want: %s, got: %s", test.url, got)
+		}
+	})
+
+}
+
+func Test_DownloadTask(t *testing.T) {
+	tools := MakeTools()
+	name := "task"
+
+	tool := getTool(name, tools)
+
+	const toolVersion = "v3.26.0"
+
+	tests := []test{
+		{
+			os:      "linux",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     "https://github.com/go-task/task/releases/download/v3.26.0/task_linux_amd64.tar.gz",
+		},
+		{
+			os:      "linux",
+			arch:    archARM7,
+			version: toolVersion,
+			url:     "https://github.com/go-task/task/releases/download/v3.26.0/task_linux_arm.tar.gz",
+		},
+		{
+			os:      "linux",
+			arch:    archARM64,
+			version: toolVersion,
+			url:     "https://github.com/go-task/task/releases/download/v3.26.0/task_linux_arm64.tar.gz",
+		},
+		{
+			os:      "darwin",
+			arch:    archDarwinARM64,
+			version: toolVersion,
+			url:     "https://github.com/go-task/task/releases/download/v3.26.0/task_darwin_arm64.tar.gz",
+		},
+		{
+			os:      "darwin",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     "https://github.com/go-task/task/releases/download/v3.26.0/task_darwin_amd64.tar.gz",
+		},
+	}
+
+	for _, tc := range tests {
+		got, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got != tc.url {
+			t.Errorf("want: %s, got: %s", tc.url, got)
+		}
+	}
+}
+
+func Test_Download1Password(t *testing.T) {
+	tools := MakeTools()
+	name := "op"
+
+	tool := getTool(name, tools)
+
+	const toolVersion = "v2.17.0"
+
+	tests := []test{
+		{
+			os:      "linux",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     "https://cache.agilebits.com/dist/1P/op2/pkg/v2.17.0/op_linux_amd64_v2.17.0.zip",
+		},
+		{
+			os:      "linux",
+			arch:    arch64bit,
+			version: "",
+			url:     "https://cache.agilebits.com/dist/1P/op2/pkg/v2.17.0/op_linux_amd64_v2.17.0.zip",
+		},
+		{
+			os:      "linux",
+			arch:    archARM7,
+			version: toolVersion,
+			url:     "https://cache.agilebits.com/dist/1P/op2/pkg/v2.17.0/op_linux_arm_v2.17.0.zip",
+		},
+		{
+			os:      "linux",
+			arch:    archARM64,
+			version: toolVersion,
+			url:     "https://cache.agilebits.com/dist/1P/op2/pkg/v2.17.0/op_linux_arm64_v2.17.0.zip",
+		},
+		{
+			os:      "ming",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     "https://cache.agilebits.com/dist/1P/op2/pkg/v2.17.0/op_windows_amd64_v2.17.0.zip",
+		},
+	}
+
+	for _, tc := range tests {
+		got, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got != tc.url {
+			t.Errorf("want: %s, got: %s", tc.url, got)
+		}
+	}
+}
+
+func Test_VHS(t *testing.T) {
+	tools := MakeTools()
+	name := "vhs"
+
+	tool := getTool(name, tools)
+
+	const toolVersion = "v0.5.0"
+
+	tests := []test{
+		{
+			os:      "linux",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     `https://github.com/charmbracelet/vhs/releases/download/v0.5.0/vhs_0.5.0_Linux_x86_64.tar.gz`,
+		},
+		{
+			os:      "darwin",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     `https://github.com/charmbracelet/vhs/releases/download/v0.5.0/vhs_Darwin_x86_64.tar.gz`,
+		},
+		{
+			os:      "linux",
+			arch:    archARM64,
+			version: toolVersion,
+			url:     `https://github.com/charmbracelet/vhs/releases/download/v0.5.0/vhs_0.5.0_Linux_arm64.tar.gz`,
+		},
+		{
+			os:      "darwin",
+			arch:    archDarwinARM64,
+			version: toolVersion,
+			url:     `https://github.com/charmbracelet/vhs/releases/download/v0.5.0/vhs_Darwin_arm64.tar.gz`,
+		},
+		{
+			os:      "ming",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     `https://github.com/charmbracelet/vhs/releases/download/v0.5.0/vhs_0.5.0_Windows_x86_64.zip`,
+		},
+	}
+
+	for _, tc := range tests {
+		got, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got != tc.url {
+			t.Errorf("want: %s, got: %s", tc.url, got)
+		}
+	}
+}
+
+func Test_DownloaSkupper(t *testing.T) {
+	tools := MakeTools()
+	name := "skupper"
+
+	tool := getTool(name, tools)
+
+	const toolVersion = "1.4.2"
+
+	tests := []test{
+		{
+			os:      "linux",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     `https://github.com/skupperproject/skupper/releases/download/1.4.2/skupper-cli-1.4.2-linux-amd64.tgz`,
+		},
+		{
+			os:      "darwin",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     `https://github.com/skupperproject/skupper/releases/download/1.4.2/skupper-cli-1.4.2-mac-amd64.tgz`,
+		},
+		{
+			os:      "linux",
+			arch:    archARM64,
+			version: toolVersion,
+			url:     `https://github.com/skupperproject/skupper/releases/download/1.4.2/skupper-cli-1.4.2-linux-arm64.tgz`,
+		},
+		{
+			os:      "darwin",
+			arch:    archDarwinARM64,
+			version: toolVersion,
+			url:     `https://github.com/skupperproject/skupper/releases/download/1.4.2/skupper-cli-1.4.2-mac-arm64.tgz`,
+		},
+		{
+			os:      "linux",
+			arch:    archARM7,
+			version: toolVersion,
+			url:     `https://github.com/skupperproject/skupper/releases/download/1.4.2/skupper-cli-1.4.2-linux-arm32.tgz`,
+		},
+		{
+			os:      "ming",
+			arch:    arch64bit,
+			version: toolVersion,
+			url:     `https://github.com/skupperproject/skupper/releases/download/1.4.2/skupper-cli-1.4.2-windows-amd64.zip`,
 		},
 	}
 

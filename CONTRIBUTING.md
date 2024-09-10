@@ -26,13 +26,15 @@ about at the end of this document.
 To add the sign-off, simply run:
 
 ```bash
-git commit --global user.name "Full Name"
-git commit --global user.email "you@example.com"
+git config --global user.name "Full Name"
+git config --global user.email "you@example.com"
 
 git commit -s / --signoff
 ```
 
-This is not cryptography, does not require any keys and does not take any longer than typing in the above three
+We do not expect to contact you in relation to your contributions, however a real, genuine email address must be used which is contactable. A no-reply email address will result in the DCO being marked as invalid by Derek, the DCO bot we use.
+
+This is not cryptography (GPG commit signing), does not require any keys and does not take any longer than typing in the above three
 commands.
 
 ### Recommended settings for apps for `arkade install`

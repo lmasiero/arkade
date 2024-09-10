@@ -7,31 +7,57 @@ With `arkade get`, you'll have `kubectl`, `kind`, `terraform`, and `jq` on your 
 <img src="docs/arkade-logo-sm.png" alt="arkade logo" width="150" height="150">
 
 [![Sponsor this](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&link=https://github.com/sponsors/alexellis)](https://github.com/sponsors/alexellis)
-[![build](https://github.com/alexellis/arkade/actions/workflows/build.yml/badge.svg)](https://github.com/alexellis/arkade/actions/workflows/build.yml)
+
+
+[![CI Build](https://github.com/alexellis/arkade/actions/workflows/build.yml/badge.svg)](https://github.com/alexellis/arkade/actions/workflows/build.yml)
+[![URL Checker](https://github.com/alexellis/arkade/actions/workflows/e2e-url-checker.yml/badge.svg)](https://github.com/alexellis/arkade/actions/workflows/e2e-url-checker.yml)
 [![GoDoc](https://godoc.org/github.com/alexellis/arkade?status.svg)](https://godoc.org/github.com/alexellis/arkade)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![Downloads](https://img.shields.io/github/downloads/alexellis/arkade/total)
 
 With over 120 CLIs and 55 Kubernetes apps (charts, manifests, installers) available for Kubernetes, gone are the days of contending with dozens of README files just to set up a development stack with the usual suspects like ingress-nginx, Postgres and cert-manager.
 
-- [arkade - The Open Source Kubernetes Marketplace](#arkade---the-open-source-kubernetes-marketplace)
-  - [Help fund arkade](#help-fund-arkade-)
+- [arkade - Open Source Marketplace For Developer Tools](#arkade---open-source-marketplace-for-developer-tools)
+  - [Support arkade 👋](#support-arkade-)
   - [Should you try arkade?](#should-you-try-arkade)
   - [Getting arkade](#getting-arkade)
   - [Usage overview](#usage-overview)
   - [Download CLI tools with arkade](#download-cli-tools-with-arkade)
+  - [Install System Packages](#install-system-packages)
   - [Install CLIs during CI with GitHub Actions](#install-clis-during-ci-with-github-actions)
   - [Verify and upgrade images in Helm charts](#verify-and-upgrade-images-in-helm-charts)
-  - [Install System Packages](#install-system-packages)
+    - [Upgrade images within a Helm chart](#upgrade-images-within-a-helm-chart)
+  - [Verify images within a helm chart](#verify-images-within-a-helm-chart)
   - [Installing apps with arkade](#installing-apps-with-arkade)
-  - [Community & contributing](#community--contributing)
+    - [Create a Kubernetes cluster](#create-a-kubernetes-cluster)
+    - [Install a Kubernetes app](#install-a-kubernetes-app)
+    - [Uninstall an app](#uninstall-an-app)
+    - [Reduce the repetition](#reduce-the-repetition)
+    - [Say goodbye to values.yaml and hello to flags](#say-goodbye-to-valuesyaml-and-hello-to-flags)
+    - [Override with `--set`](#override-with---set)
+    - [Compounding apps](#compounding-apps)
+      - [Get a self-hosted TLS registry with authentication](#get-a-self-hosted-tls-registry-with-authentication)
+      - [Get a public IP for a private cluster and your IngressController](#get-a-public-ip-for-a-private-cluster-and-your-ingresscontroller)
+    - [Explore the apps](#explore-the-apps)
+  - [Community \& contributing](#community--contributing)
+    - [Tutorials \& community blog posts](#tutorials--community-blog-posts)
+      - [Watch a video walk-through by Alex Ellis](#watch-a-video-walk-through-by-alex-ellis)
+      - [Featured tutorials](#featured-tutorials)
+      - [Official blog posts](#official-blog-posts)
+      - [Community posts](#community-posts)
+    - [Suggest a new app](#suggest-a-new-app)
   - [Sponsored apps](#sponsored-apps)
   - [FAQ](#faq)
-
-  See also:
-
-- [Catalog of CLI tools](#catalog-of-clis)
-- [Catalog of Kubernetes apps](#catalog-of-apps)
+    - [How does `arkade` compare to `helm`?](#how-does-arkade-compare-to-helm)
+    - [Is arkade suitable for production use?](#is-arkade-suitable-for-production-use)
+    - [What is in scope for `arkade get`?](#what-is-in-scope-for-arkade-get)
+    - [Automatic download of tools](#automatic-download-of-tools)
+    - [Improving the code or fixing an issue](#improving-the-code-or-fixing-an-issue)
+    - [Join us on Slack](#join-us-on-slack)
+    - [License](#license)
+  - [Catalog of apps and CLIs](#catalog-of-apps-and-clis)
+    - [Catalog of Apps](#catalog-of-apps)
+    - [Catalog of CLIs](#catalog-of-clis)
 
 ## Support arkade 👋
 
@@ -162,6 +188,20 @@ arkade get faas-cli \
 ```
 > This is a time saver compared to searching for download pages every time you need a tool.
 
+Files are stored at `$HOME/.arkade/bin/`
+
+Want to download tools to a custom path such as into the GitHub Actions cached tool folder?
+
+```bash
+arkade get faas-cli kubectl \
+  --path $HOME/runner/_work/_tools
+
+# Usage:
+/runner/_work/_tools/faas-cli version
+
+PATH=$PATH:$HOME/runner/_work/_tools
+faas-cli version
+```
 
 Think of `arkade get TOOL` as a doing for CLIs, what `arkade install` does for helm.
 
@@ -200,9 +240,11 @@ Run the following to see what's available `arkade system install`:
 
 ```
   actions-runner  Install GitHub Actions Runner
+  buildkitd       Install Buildkitd
   cni             Install CNI plugins
   containerd      Install containerd
   firecracker     Install Firecracker
+  gitlab-runner   Install Gitlab Runner
   go              Install Go
   node            Install Node.js
   prometheus      Install Prometheus
@@ -214,24 +256,11 @@ The initial set of system apps is now complete, learn more in the original propo
 
 ## Install CLIs during CI with GitHub Actions
 
-There are two GitHub Actions available for arkade
-
-* [alexellis/setup-arkade@master](https://github.com/alexellis/setup-arkade)
-
-```yaml
-    - uses: alexellis/setup-arkade@v2
-    - name: Install kubectl & Helm
-      run: arkade get 
-        kubectl \
-        helm
-```
-
 * [alexellis/arkade-get@master](https://github.com/alexellis/arkade-get)
 
 Example downloading faas-cli (specific version) and kubectl (latest), putting them into the PATH automatically, and executing one of them in a subsequent step.
 
 ```yaml
-    - uses: alexellis/setup-arkade@v2
     - uses: alexellis/arkade-get@master
       with:
         kubectl: latest
@@ -239,6 +268,18 @@ Example downloading faas-cli (specific version) and kubectl (latest), putting th
     - name: check for faas-cli
       run: |
         faas-cli version
+```
+
+If you just need system applications, you could also try "setup-arkade":
+
+* [alexellis/setup-arkade@master](https://github.com/alexellis/setup-arkade)
+
+```yaml
+    - uses: alexellis/setup-arkade@v2
+    - name: Install containerd and go
+      run: |
+        arkade system install containerd
+        arkade system install go
 ```
 
 ## Verify and upgrade images in Helm charts
@@ -682,9 +723,12 @@ There are 56 apps that you can install on your cluster.
 
 |                                     TOOL                                     |                                                                DESCRIPTION                                                                |
 |------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------|
+| [actions-usage](https://github.com/self-actuated/actions-usage)              | Get usage insights from GitHub Actions.                                                                                                   |
+| [actuated-cli](https://github.com/self-actuated/actuated-cli)                | Official CLI for actuated.dev                                                                                                             |
 | [argocd](https://github.com/argoproj/argo-cd)                                | Declarative, GitOps continuous delivery tool for Kubernetes.                                                                              |
 | [argocd-autopilot](https://github.com/argoproj-labs/argocd-autopilot)        | An opinionated way of installing Argo-CD and managing GitOps repositories.                                                                |
 | [arkade](https://github.com/alexellis/arkade)                                | Portable marketplace for downloading your favourite devops CLIs and installing helm charts, with a single command.                        |
+| [atuin](https://github.com/ellie/atuin)                                      | Sync, search and backup shell history with Atuin.                                                                                         |
 | [autok3s](https://github.com/cnrancher/autok3s)                              | Run Rancher Lab's lightweight Kubernetes distribution k3s everywhere.                                                                     |
 | [buildx](https://github.com/docker/buildx)                                   | Docker CLI plugin for extended build capabilities with BuildKit.                                                                          |
 | [bun](https://github.com/oven-sh/bun)                                        | Bun is an incredibly fast JavaScript runtime, bundler, transpiler and package manager – all in one.                                       |
@@ -694,7 +738,9 @@ There are 56 apps that you can install on your cluster.
 | [civo](https://github.com/civo/cli)                                          | CLI for interacting with your Civo resources.                                                                                             |
 | [clusterawsadm](https://github.com/kubernetes-sigs/cluster-api-provider-aws) | Kubernetes Cluster API Provider AWS Management Utility                                                                                    |
 | [clusterctl](https://github.com/kubernetes-sigs/cluster-api)                 | The clusterctl CLI tool handles the lifecycle of a Cluster API management cluster                                                         |
+| [cmctl](https://github.com/cert-manager/cert-manager)                        | cmctl is a CLI tool that helps you manage cert-manager and its resources inside your cluster.                                             |
 | [conftest](https://github.com/open-policy-agent/conftest)                    | Write tests against structured configuration data using the Open Policy Agent Rego query language                                         |
+| [copa](https://github.com/project-copacetic/copacetic)                       | CLI for patching container images                                                                                                         |
 | [cosign](https://github.com/sigstore/cosign)                                 | Container Signing, Verification and Storage in an OCI registry.                                                                           |
 | [cr](https://github.com/helm/chart-releaser)                                 | Hosting Helm Charts via GitHub Pages and Releases                                                                                         |
 | [crane](https://github.com/google/go-containerregistry)                      | crane is a tool for interacting with remote images and registries                                                                         |
@@ -704,12 +750,14 @@ There are 56 apps that you can install on your cluster.
 | [dive](https://github.com/wagoodman/dive)                                    | A tool for exploring each layer in a docker image                                                                                         |
 | [docker-compose](https://github.com/docker/compose)                          | Define and run multi-container applications with Docker.                                                                                  |
 | [doctl](https://github.com/digitalocean/doctl)                               | Official command line interface for the DigitalOcean API.                                                                                 |
-| [eksctl](https://github.com/weaveworks/eksctl)                               | Amazon EKS Kubernetes cluster management                                                                                                  |
+| [eksctl](https://github.com/eksctl-io/eksctl)                                | Amazon EKS Kubernetes cluster management                                                                                                  |
 | [eksctl-anywhere](https://github.com/aws/eks-anywhere)                       | Run Amazon EKS on your own infrastructure                                                                                                 |
+| [etcd](https://github.com/etcd-io/etcd)                                      | Distributed reliable key-value store for the most critical data of a distributed system.                                                  |
 | [faas-cli](https://github.com/openfaas/faas-cli)                             | Official CLI for OpenFaaS.                                                                                                                |
 | [firectl](https://github.com/firecracker-microvm/firectl)                    | Command-line tool that lets you run arbitrary Firecracker MicroVMs                                                                        |
 | [flux](https://github.com/fluxcd/flux2)                                      | Continuous Delivery solution for Kubernetes powered by GitOps Toolkit.                                                                    |
 | [flyctl](https://github.com/superfly/flyctl)                                 | Command line tools for fly.io services                                                                                                    |
+| [fstail](https://github.com/alexellis/fstail)                                | Tail modified files in a directory.                                                                                                       |
 | [fzf](https://github.com/junegunn/fzf)                                       | General-purpose command-line fuzzy finder                                                                                                 |
 | [gh](https://github.com/cli/cli)                                             | GitHub’s official command line tool.                                                                                                      |
 | [golangci-lint](https://github.com/golangci/golangci-lint)                   | Go linters aggregator.                                                                                                                    |
@@ -728,7 +776,7 @@ There are 56 apps that you can install on your cluster.
 | [inlets-pro](https://github.com/inlets/inlets-pro)                           | Cloud Native Tunnel for HTTP and TCP traffic.                                                                                             |
 | [inletsctl](https://github.com/inlets/inletsctl)                             | Automates the task of creating an exit-server (tunnel server) on public cloud infrastructure.                                             |
 | [istioctl](https://github.com/istio/istio)                                   | Service Mesh to establish a programmable, application-aware network using the Envoy service proxy.                                        |
-| [jq](https://github.com/stedolan/jq)                                         | jq is a lightweight and flexible command-line JSON processor                                                                              |
+| [jq](https://github.com/jqlang/jq)                                           | jq is a lightweight and flexible command-line JSON processor                                                                              |
 | [just](https://github.com/casey/just)                                        | Just a command runner                                                                                                                     |
 | [k0s](https://github.com/k0sproject/k0s)                                     | Zero Friction Kubernetes                                                                                                                  |
 | [k0sctl](https://github.com/k0sproject/k0sctl)                               | A bootstrapping and management tool for k0s clusters                                                                                      |
@@ -745,7 +793,9 @@ There are 56 apps that you can install on your cluster.
 | [kind](https://github.com/kubernetes-sigs/kind)                              | Run local Kubernetes clusters using Docker container nodes.                                                                               |
 | [kops](https://github.com/kubernetes/kops)                                   | Production Grade K8s Installation, Upgrades, and Management.                                                                              |
 | [krew](https://github.com/kubernetes-sigs/krew)                              | Package manager for kubectl plugins.                                                                                                      |
+| [ktop](https://github.com/vladimirvivien/ktop)                               | A top-like tool for your Kubernetes cluster.                                                                                              |
 | [kube-bench](https://github.com/aquasecurity/kube-bench)                     | Checks whether Kubernetes is deployed securely by running the checks documented in the CIS Kubernetes Benchmark.                          |
+| [kube-burner](https://github.com/cloud-bulldozer/kube-burner)                | A tool aimed at stressing Kubernetes clusters by creating or deleting a high quantity of objects.                                         |
 | [kubebuilder](https://github.com/kubernetes-sigs/kubebuilder)                | Framework for building Kubernetes APIs using custom resource definitions (CRDs).                                                          |
 | [kubecm](https://github.com/sunny0826/kubecm)                                | Easier management of kubeconfig.                                                                                                          |
 | [kubeconform](https://github.com/yannh/kubeconform)                          | A FAST Kubernetes manifests validator, with support for Custom Resources                                                                  |
@@ -759,6 +809,7 @@ There are 56 apps that you can install on your cluster.
 | [kubeval](https://github.com/instrumenta/kubeval)                            | Validate your Kubernetes configuration files, supports multiple Kubernetes versions                                                       |
 | [kumactl](https://github.com/kumahq/kuma)                                    | kumactl is a CLI to interact with Kuma and its data                                                                                       |
 | [kustomize](https://github.com/kubernetes-sigs/kustomize)                    | Customization of kubernetes YAML configurations                                                                                           |
+| [kyverno](https://github.com/kyverno/kyverno)                                | CLI to apply and test Kyverno policies outside a cluster.                                                                                 |
 | [lazygit](https://github.com/jesseduffield/lazygit)                          | A simple terminal UI for git commands.                                                                                                    |
 | [linkerd2](https://github.com/linkerd/linkerd2)                              | Ultralight, security-first service mesh for Kubernetes.                                                                                   |
 | [mc](https://github.com/minio/mc)                                            | MinIO Client is a replacement for ls, cp, mkdir, diff and rsync commands for filesystems and object storage.                              |
@@ -770,8 +821,11 @@ There are 56 apps that you can install on your cluster.
 | [nats-server](https://github.com/nats-io/nats-server)                        | Cloud native message bus and queue server                                                                                                 |
 | [nerdctl](https://github.com/containerd/nerdctl)                             | Docker-compatible CLI for containerd, with support for Compose                                                                            |
 | [nova](https://github.com/FairwindsOps/nova)                                 | Find outdated or deprecated Helm charts running in your cluster.                                                                          |
+| [oc](https://github.com/openshift/oc)                                        | Client to use an OpenShift 4.x cluster.                                                                                                   |
 | [oh-my-posh](https://github.com/jandedobbeleer/oh-my-posh)                   | A prompt theme engine for any shell that can display kubernetes information.                                                              |
+| [op](https://github.com/1password/)                                          | 1Password CLI enables you to automate administrative tasks and securely provision secrets across development environments.                |
 | [opa](https://github.com/open-policy-agent/opa)                              | General-purpose policy engine that enables unified, context-aware policy enforcement across the entire stack.                             |
+| [openshift-install](https://github.com/openshift/installer)                  | CLI to install an OpenShift 4.x cluster.                                                                                                  |
 | [operator-sdk](https://github.com/operator-framework/operator-sdk)           | Operator SDK is a tool for scaffolding and generating code for building Kubernetes operators                                              |
 | [osm](https://github.com/openservicemesh/osm)                                | Open Service Mesh uniformly manages, secures, and gets out-of-the-box observability features.                                             |
 | [pack](https://github.com/buildpacks/pack)                                   | Build apps using Cloud Native Buildpacks.                                                                                                 |
@@ -781,28 +835,34 @@ There are 56 apps that you can install on your cluster.
 | [porter](https://github.com/getporter/porter)                                | With Porter you can package your application artifact, tools, etc. as a bundle that can distribute and install.                           |
 | [promtool](https://github.com/prometheus/prometheus)                         | Prometheus rule tester and debugging utility                                                                                              |
 | [rekor-cli](https://github.com/sigstore/rekor)                               | Secure Supply Chain - Transparency Log                                                                                                    |
+| [replicated](https://github.com/replicatedhq/replicated)                     | CLI for interacting with the Replicated Vendor API                                                                                        |
 | [rpk](https://github.com/redpanda-data/redpanda)                             | Kafka compatible streaming platform for mission critical workloads.                                                                       |
 | [run-job](https://github.com/alexellis/run-job)                              | Run a Kubernetes Job and get the logs when it's done.                                                                                     |
 | [scaleway-cli](https://github.com/scaleway/scaleway-cli)                     | Scaleway CLI is a tool to help you pilot your Scaleway infrastructure directly from your terminal.                                        |
-| [sops](https://github.com/mozilla/sops)                                      | Simple and flexible tool for managing secrets                                                                                             |
+| [seaweedfs](https://github.com/seaweedfs/seaweedfs)                          | SeaweedFS is a fast distributed storage system for blobs, objects, files, and data lake, for billions of files!                           |
+| [skupper](https://github.com/skupperproject/skupper)                         | Skupper is an implementation of a Virtual Application Network, enabling rich hybrid cloud communication                                   |
+| [sops](https://github.com/getsops/sops)                                      | Simple and flexible tool for managing secrets                                                                                             |
 | [stern](https://github.com/stern/stern)                                      | Multi pod and container log tailing for Kubernetes.                                                                                       |
 | [syft](https://github.com/anchore/syft)                                      | CLI tool and library for generating a Software Bill of Materials from container images and filesystems                                    |
 | [talosctl](https://github.com/siderolabs/talos)                              | The command-line tool for managing Talos Linux OS.                                                                                        |
+| [task](https://github.com/go-task/task)                                      | A simple task runner and build tool                                                                                                       |
 | [tctl](https://github.com/temporalio/tctl)                                   | Temporal CLI.                                                                                                                             |
 | [terraform](https://github.com/hashicorp/terraform)                          | Infrastructure as Code for major cloud providers.                                                                                         |
 | [terragrunt](https://github.com/gruntwork-io/terragrunt)                     | Terragrunt is a thin wrapper for Terraform that provides extra tools for working with multiple Terraform modules                          |
 | [terrascan](https://github.com/tenable/terrascan)                            | Detect compliance and security violations across Infrastructure as Code.                                                                  |
 | [tfsec](https://github.com/aquasecurity/tfsec)                               | Security scanner for your Terraform code                                                                                                  |
 | [tilt](https://github.com/tilt-dev/tilt)                                     | A multi-service dev environment for teams on Kubernetes.                                                                                  |
+| [timoni](https://github.com/stefanprodan/timoni)                             | A package manager for Kubernetes powered by CUE.                                                                                          |
 | [tkn](https://github.com/tektoncd/cli)                                       | A CLI for interacting with Tekton.                                                                                                        |
 | [trivy](https://github.com/aquasecurity/trivy)                               | Vulnerability Scanner for Containers and other Artifacts, Suitable for CI.                                                                |
 | [vagrant](https://github.com/hashicorp/vagrant)                              | Tool for building and distributing development environments.                                                                              |
 | [vault](https://github.com/hashicorp/vault)                                  | A tool for secrets management, encryption as a service, and privileged access management.                                                 |
 | [vcluster](https://github.com/loft-sh/vcluster)                              | Create fully functional virtual Kubernetes clusters - Each vcluster runs inside a namespace of the underlying k8s cluster.                |
+| [vhs](https://github.com/charmbracelet/vhs)                                  | A CLI tool for recording demos.                                                                                                           |
 | [viddy](https://github.com/sachaos/viddy)                                    | A modern watch command. Time machine and pager etc.                                                                                       |
 | [waypoint](https://github.com/hashicorp/waypoint)                            | Easy application deployment for Kubernetes and Amazon ECS                                                                                 |
 | [yq](https://github.com/mikefarah/yq)                                        | Portable command-line YAML processor.                                                                                                     |
-There are 120 tools, use `arkade get NAME` to download one.
+| [yt-dlp](https://github.com/yt-dlp/yt-dlp)                                   | Fork of youtube-dl with additional features and fixes                                                                                     |
+There are 140 tools, use `arkade get NAME` to download one.
 
-
-> Note to contributors, run `arkade get --output markdown` to generate this list
+> Note to contributors, run `arkade get --format markdown` to generate this list
