@@ -33,10 +33,6 @@ func MakeInstallArgoCD() *cobra.Command {
 		arch := k8s.GetNodeArchitecture()
 		fmt.Printf("Node architecture: %q\n", arch)
 
-		if arch != IntelArch {
-			return fmt.Errorf(OnlyIntelArch)
-		}
-
 		_, err := k8s.KubectlTask("create", "ns",
 			"argocd")
 		if err != nil {
@@ -60,8 +56,8 @@ func MakeInstallArgoCD() *cobra.Command {
 }
 
 const ArgoCDInfoMsg = `
-# Get the ArgoCD CLI
-arkade install argocd
+# Install the "argocd" CLI:
+arkade get argocd
 
 # Port-forward the ArgoCD API server
 kubectl port-forward svc/argocd-server -n argocd 8443:443 &

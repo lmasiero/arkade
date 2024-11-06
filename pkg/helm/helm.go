@@ -4,6 +4,7 @@
 package helm
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -13,7 +14,7 @@ import (
 
 	"github.com/alexellis/arkade/pkg/env"
 	"github.com/alexellis/arkade/pkg/get"
-	execute "github.com/alexellis/go-execute/pkg/v1"
+	execute "github.com/alexellis/go-execute/v2"
 )
 
 func TryDownloadHelm(userPath, clientArch, clientOS string) (string, error) {
@@ -28,22 +29,6 @@ func TryDownloadHelm(userPath, clientArch, clientOS string) (string, error) {
 
 	}
 	return helmBinaryPath, nil
-}
-
-func GetHelmURL(arch, os, version string) string {
-	archSuffix := "amd64"
-	osSuffix := strings.ToLower(os)
-
-	if strings.HasPrefix(arch, "armv7") {
-		archSuffix = "arm"
-	} else if strings.HasPrefix(arch, "aarch64") {
-		archSuffix = "arm64"
-	}
-	if strings.Contains(strings.ToLower(os), "mingw") {
-		osSuffix = "windows"
-	}
-
-	return fmt.Sprintf("https://get.helm.sh/helm-%s-%s-%s.tar.gz", version, osSuffix, archSuffix)
 }
 
 func DownloadHelm(userPath, clientArch, clientOS, subdir string) error {
@@ -66,11 +51,12 @@ func DownloadHelm(userPath, clientArch, clientOS, subdir string) error {
 			quiet    bool
 		)
 
+		defaultMovePath := ""
 		outPath, finalName, err := get.Download(tool,
 			clientArch,
 			clientOS,
 			tool.Version,
-			get.DownloadArkadeDir,
+			defaultMovePath,
 			progress,
 			quiet)
 		if err != nil {
@@ -85,39 +71,17 @@ func DownloadHelm(userPath, clientArch, clientOS, subdir string) error {
 	return nil
 }
 
-func HelmInit() error {
-	fmt.Printf("Running helm init.\n")
-	subdir := ""
-
-	task := execute.ExecTask{
-		Command:     fmt.Sprintf("%s", env.LocalBinary("helm", subdir)),
-		Env:         os.Environ(),
-		Args:        []string{"init", "--client-only"},
-		StreamStdio: true,
-	}
-
-	res, err := task.Execute()
-
-	if err != nil {
-		return err
-	}
-
-	if res.ExitCode != 0 {
-		return fmt.Errorf("exit code %d", res.ExitCode)
-	}
-	return nil
-}
-
 func UpdateHelmRepos(helm3 bool) error {
 	subdir := ""
 
 	task := execute.ExecTask{
-		Command:     fmt.Sprintf("%s repo update", env.LocalBinary("helm", subdir)),
+		Command:     env.LocalBinary("helm", subdir),
+		Args:        []string{"repo", "update"},
 		Env:         os.Environ(),
 		StreamStdio: true,
 	}
 
-	res, err := task.Execute()
+	res, err := task.Execute(context.Background())
 
 	if err != nil {
 		return err
@@ -137,12 +101,12 @@ func AddHelmRepo(name, url string, update bool) error {
 	}
 
 	task := execute.ExecTask{
-		Command:     fmt.Sprintf("%s repo add %s %s", env.LocalBinary("helm", subdir), name, url),
+		Command:     env.LocalBinary("helm", subdir),
+		Args:        []string{"repo", "add", name, url, "--force-update"},
 		Env:         os.Environ(),
 		StreamStdio: true,
 	}
-	res, err := task.Execute()
-
+	res, err := task.Execute(context.Background())
 	if err != nil {
 		return err
 	}
@@ -155,11 +119,12 @@ func AddHelmRepo(name, url string, update bool) error {
 
 	if update {
 		task := execute.ExecTask{
-			Command:     fmt.Sprintf("%s repo update", env.LocalBinary("helm", subdir)),
+			Command:     env.LocalBinary("helm", subdir),
+			Args:        []string{"repo", "update"},
 			Env:         os.Environ(),
 			StreamStdio: true,
 		}
-		res, err := task.Execute()
+		res, err := task.Execute(context.Background())
 
 		if err != nil {
 			return err
@@ -177,29 +142,28 @@ func AddHelmRepo(name, url string, update bool) error {
 
 func FetchChart(chart, version string) error {
 	chartsPath := path.Join(os.TempDir(), "charts")
-	versionStr := ""
 
-	if len(version) > 0 {
-		// Issue in helm where adding a space to the command makes it think that it's another chart of " " we want to template,
-		// So we add the space before version here rather than on the command
-		versionStr = " --version " + version
-	}
 	subdir := ""
 
 	// First remove any existing folder
 	os.RemoveAll(chartsPath)
 
-	mkErr := os.MkdirAll(chartsPath, 0700)
-
-	if mkErr != nil {
-		return mkErr
+	if err := os.MkdirAll(chartsPath, 0700); err != nil {
+		return err
 	}
+
 	task := execute.ExecTask{
-		Command:     fmt.Sprintf("%s fetch %s --untar=true --untardir %s%s", env.LocalBinary("helm", subdir), chart, chartsPath, versionStr),
+		Command:     env.LocalBinary("helm", subdir),
+		Args:        []string{"fetch", chart, "--untar=true", "--untardir", chartsPath},
 		Env:         os.Environ(),
 		StreamStdio: true,
 	}
-	res, err := task.Execute()
+
+	if len(version) > 0 {
+		task.Args = append(task.Args, "--version", version)
+	}
+
+	res, err := task.Execute(context.Background())
 
 	if err != nil {
 		return err
@@ -209,6 +173,10 @@ func FetchChart(chart, version string) error {
 		return fmt.Errorf("exit code %d", res.ExitCode)
 	}
 	return nil
+}
+
+func IsOCI(chart string) bool {
+	return strings.HasPrefix(chart, "oci://")
 }
 
 func Helm3Upgrade(chart, namespace, values, version string, overrides map[string]string, wait bool) error {
@@ -253,7 +221,63 @@ func Helm3Upgrade(chart, namespace, values, version string, overrides map[string
 	}
 
 	fmt.Printf("Command: %s %s\n", task.Command, task.Args)
-	res, err := task.Execute()
+	res, err := task.Execute(context.Background())
+
+	if err != nil {
+		return err
+	}
+
+	if res.ExitCode != 0 {
+		return fmt.Errorf("exit code %d, stderr: %s", res.ExitCode, res.Stderr)
+	}
+
+	if len(res.Stderr) > 0 {
+		log.Printf("stderr: %s\n", res.Stderr)
+	}
+
+	return nil
+}
+
+func Helm3OCIUpgrade(chart, namespace, values, version string, overrides map[string]string, wait bool) error {
+
+	if !IsOCI(chart) {
+		return fmt.Errorf("chart %s is not an OCI chart URL", chart)
+	}
+
+	index := strings.LastIndex(chart, "/")
+	if index < 0 {
+		return fmt.Errorf("chart %s is not an OCI chart URL", chart)
+	}
+	name := chart[index+1:]
+
+	args := []string{"upgrade", "--install", name, chart, "--namespace", namespace}
+	if len(version) > 0 {
+		args = append(args, "--version", version)
+	}
+
+	if wait {
+		args = append(args, "--wait")
+	}
+
+	fmt.Println("VALUES", values)
+	if len(values) > 0 {
+		args = append(args, "--values", values)
+	}
+
+	for k, v := range overrides {
+		args = append(args, "--set")
+		args = append(args, fmt.Sprintf("%s=%s", k, v))
+	}
+
+	task := execute.ExecTask{
+		Command:     env.LocalBinary("helm", ""),
+		Args:        args,
+		Env:         os.Environ(),
+		StreamStdio: true,
+	}
+
+	fmt.Printf("Command: %s %s\n", task.Command, task.Args)
+	res, err := task.Execute(context.TODO())
 
 	if err != nil {
 		return err

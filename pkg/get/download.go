@@ -29,7 +29,7 @@ func (e *ErrNotFound) Error() string {
 	return "server returned status: 404"
 }
 
-func Download(tool *Tool, arch, operatingSystem, version string, downloadMode int, displayProgress, quiet bool) (string, string, error) {
+func Download(tool *Tool, arch, operatingSystem, version string, movePath string, displayProgress, quiet bool) (string, string, error) {
 
 	downloadURL, err := GetDownloadURL(tool,
 		strings.ToLower(operatingSystem),
@@ -47,14 +47,12 @@ func Download(tool *Tool, arch, operatingSystem, version string, downloadMode in
 	if err != nil {
 		return "", "", err
 	}
+
 	if !quiet {
 		fmt.Printf("%s written.\n", outFilePath)
 	}
 
-	if isArchive, err := tool.IsArchive(quiet); isArchive {
-		if err != nil {
-			return "", "", err
-		}
+	if isArchiveStr(downloadURL) {
 
 		outPath, err := decompress(tool, downloadURL, outFilePath, operatingSystem, arch, version, quiet)
 		if err != nil {
@@ -72,28 +70,40 @@ func Download(tool *Tool, arch, operatingSystem, version string, downloadMode in
 		finalName = finalName + ".exe"
 	}
 
-	if downloadMode == DownloadArkadeDir {
+	var localPath string
+
+	if movePath == "" {
 		_, err := config.InitUserDir()
 		if err != nil {
 			return "", "", err
 		}
 
-		localPath := env.LocalBinary(finalName, "")
-
-		if !quiet {
-			log.Printf("Copying %s to %s\n", outFilePath, localPath)
-		}
-		_, err = CopyFile(outFilePath, localPath)
-		if err != nil {
-			return "", "", err
-		}
-
-		outFilePath = localPath
+		localPath = env.LocalBinary(finalName, "")
+	} else {
+		localPath = filepath.Join(movePath, finalName)
 	}
+
+	if !quiet {
+		log.Printf("Copying %s to %s\n", outFilePath, localPath)
+	}
+
+	if _, err = CopyFile(outFilePath, localPath); err != nil {
+		return "", "", err
+	}
+
+	// Remove parent folder of the binary
+	tempPath := filepath.Dir(outFilePath)
+	if err := os.RemoveAll(tempPath); err != nil {
+		log.Printf("Error removing temporary directory: %s", err)
+	}
+
+	outFilePath = localPath
 
 	return outFilePath, finalName, nil
 }
 
+// DownloadFile downloads a file to a temporary directory
+// and returns the path to the file and any error.
 func DownloadFileP(downloadURL string, displayProgress bool) (string, error) {
 	return downloadFile(downloadURL, displayProgress)
 }
@@ -126,9 +136,18 @@ func downloadFile(downloadURL string, displayProgress bool) (string, error) {
 
 	_, fileName := path.Split(downloadURL)
 	tmp := os.TempDir()
-	outFilePath := path.Join(tmp, fileName)
+
+	customTmp, err := os.MkdirTemp(tmp, "arkade-*")
+	if err != nil {
+		return "", err
+	}
+
+	outFilePath := path.Join(customTmp, fileName)
 	wrappedReader := withProgressBar(res.Body, int(res.ContentLength), displayProgress)
-	out, err := os.Create(outFilePath)
+
+	// Owner/Group read/write/execute
+	// World - execute
+	out, err := os.OpenFile(outFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0775)
 	if err != nil {
 		return "", err
 	}

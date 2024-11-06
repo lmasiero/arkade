@@ -95,7 +95,7 @@ func MakeInstallGo() *cobra.Command {
 
 		fmt.Printf("Unpacking Go to: %s\n", path.Join(installPath, "go"))
 
-		if err := archive.UntarNested(f, installPath); err != nil {
+		if err := archive.UntarNested(f, installPath, true, false); err != nil {
 			return err
 		}
 
@@ -121,9 +121,6 @@ func getGoVersion() (string, error) {
 		return "", err
 	}
 
-	if res.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("unexpected status code: %d", res.StatusCode)
-	}
 	if res.Body == nil {
 		return "", fmt.Errorf("unexpected empty body")
 	}
@@ -131,5 +128,15 @@ func getGoVersion() (string, error) {
 	defer res.Body.Close()
 	body, _ := io.ReadAll(res.Body)
 
-	return strings.TrimSpace(string(body)), nil
+	if res.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("unexpected status code: %d", res.StatusCode)
+	}
+
+	content := strings.TrimSpace(string(body))
+	version, _, ok := strings.Cut(content, "\n")
+	if !ok {
+		return "", fmt.Errorf("format unexpected: %q", content)
+	}
+
+	return version, nil
 }

@@ -37,10 +37,10 @@ IngressController`,
 	}
 
 	inletsOperator.Flags().StringP("namespace", "n", "default", "The namespace used for installation")
-	inletsOperator.Flags().StringP("license", "l", "", "The license key for inlets PRO")
-	inletsOperator.Flags().StringP("license-file", "f", "$HOME/.inlets/LICENSE", "Path to license JWT file for inlets PRO")
+	inletsOperator.Flags().StringP("license", "l", "", "The license key for inlets")
+	inletsOperator.Flags().StringP("license-file", "f", "$HOME/.inlets/LICENSE", "Path to license JWT file for inlets")
 
-	inletsOperator.Flags().StringP("provider", "p", "digitalocean", "Your infrastructure provider - 'equinix-metal', 'digitalocean', 'scaleway', 'linode', 'civo', 'gce', 'ec2', 'azure', 'hetzner'")
+	inletsOperator.Flags().StringP("provider", "p", "digitalocean", "Your infrastructure provider - 'digitalocean', 'scaleway', 'linode', 'gce', 'ec2', 'azure', 'hetzner'")
 	inletsOperator.Flags().StringP("zone", "z", "us-central1-a", "The zone to provision the exit node (GCE)")
 	inletsOperator.Flags().String("project-id", "", "Project ID to be used (for GCE and Equinix Metal)")
 	inletsOperator.Flags().StringP("region", "r", "lon1", "The default region to provision the exit node (DigitalOcean, Equinix Metal and Scaleway)")
@@ -57,9 +57,18 @@ IngressController`,
 	inletsOperator.Flags().StringArray("set", []string{}, "Use custom flags or override existing flags \n(example --set image=org/repo:tag)")
 
 	inletsOperator.PreRunE = func(command *cobra.Command, args []string) error {
-		tokenString, _ := command.Flags().GetString("token")
-		tokenFileName, _ := command.Flags().GetString("token-file")
-		secretKeyFile, _ := command.Flags().GetString("secret-key-file")
+		tokenString, err := command.Flags().GetString("token")
+		if err != nil {
+			return err
+		}
+		tokenFileName, err := command.Flags().GetString("token-file")
+		if err != nil {
+			return err
+		}
+		secretKeyFile, err := command.Flags().GetString("secret-key-file")
+		if err != nil {
+			return err
+		}
 
 		return validatePreRun(tokenString, tokenFileName, secretKeyFile)
 	}
@@ -138,7 +147,7 @@ IngressController`,
 				Name:      "inlets-secret-key",
 			}
 			s.Literals = append(s.Literals, SecretLiteral{
-				Name:     "inlets-access-key",
+				Name:     "inlets-secret-key",
 				FromFile: secretKeyFile,
 			})
 
@@ -161,7 +170,7 @@ IngressController`,
 		licenseFile, _ := command.Flags().GetString("license-file")
 		fileFlagChanged := command.Flags().Changed("license-file")
 
-		noLicenseErr := fmt.Errorf("--license or --license-file is required for inlets PRO")
+		noLicenseErr := fmt.Errorf("--license or --license-file is required for inlets")
 		if len(license) == 0 {
 			if len(licenseFile) > 0 {
 				licenseFile = os.ExpandEnv(licenseFile)
@@ -311,7 +320,7 @@ func getInletsOperatorOverrides(command *cobra.Command) (map[string]string, erro
 			return overrides, fmt.Errorf("region is required for provider %s", provider)
 		}
 
-		validHetznerRegions := []string{"fsn1", "nbg1", "hel1"}
+		validHetznerRegions := []string{"fsn1", "nbg1", "hel1", "eu-central"}
 		foundRegion := false
 		for _, validRegion := range validHetznerRegions {
 			if validRegion == userInputRegion {

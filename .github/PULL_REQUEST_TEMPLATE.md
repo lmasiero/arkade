@@ -14,13 +14,11 @@
 <!--- Include details of your testing environment, and the tests you ran to -->
 <!--- see how your change affects other areas of the code, etc. -->
 
-## Are you a GitHub Sponsor yet (Yes/No?)
+If updating or adding a new CLI to `arkade get`, run:
 
-<!-- Requests from sponsors take priority -->
-<!--- Check at https://github.com/sponsors/alexellis         -->
-
-- [ ] Yes
-- [ ] No
+```
+go build && ./hack/test-tool.sh TOOL_NAME
+```
 
 ## Types of changes
 <!--- What types of changes does your code introduce? Put an `x` in all the boxes that apply: -->
@@ -30,7 +28,7 @@
 
 ## Documentation
 
-- [ ] I have updated the list of tools in README.md if (required) with `./arkade get -o markdown`
+- [ ] I have updated the list of tools in README.md if (required) with `./arkade get --format markdown`
 - [ ] I have updated the list of apps in README.md if (required) with `./arkade install --help`
 
 ## Checklist:
@@ -40,5 +38,5 @@
 - [ ] I've read the [CONTRIBUTION](https://github.com/alexellis/arkade/blob/master/CONTRIBUTING.md) guide
 - [ ] I have signed-off my commits with `git commit -s`
 
-<!--- In case it is a new application -->
+<!--- For "arkade install" or "arkade system install" -->
 - [ ] I have tested this on arm, or have added code to prevent deployment
