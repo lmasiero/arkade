@@ -29,14 +29,27 @@ func getLatestNodeVersion(version, channel string) (*string, error) {
 		return nil, err
 	}
 
+	if res.Body != nil {
+		defer res.Body.Close()
+	}
+
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}
-	regex := regexp.MustCompile(`(?m)node-(.*)-linux-.*"`)
+
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("could not find latest version for %s, (%d), body: %s", version, res.StatusCode, string(body))
+	}
+
+	regex := regexp.MustCompile(`(?m)node-v(\d+.\d+.\d+)-linux-.*`)
 	result := regex.FindStringSubmatch(string(body))
+
 	if len(result) < 2 {
-		return nil, fmt.Errorf("could not find latest version for %s", version)
+		if v, ok := os.LookupEnv("ARK_DEBUG"); ok && v == "1" {
+			fmt.Printf("Body: %s\n", string(body))
+		}
+		return nil, fmt.Errorf("could not find latest version for %s, (%d), %s", version, res.StatusCode, result)
 	}
 	return &result[1], nil
 }
@@ -51,11 +64,11 @@ func MakeInstallNode() *cobra.Command {
 		SilenceUsage: true,
 	}
 
-	command.Flags().StringP("version", "v", "latest", "The version for Node.js to install, either a specific version, 'latest' or 'latest-CODENAME' (eg: latest-gallium)")
+	command.Flags().StringP("version", "v", "latest", "The version for Node.js to install, either a specific version, 'latest' or 'latest-CODENAME' (eg: latest-hydrogen)")
 	command.Flags().StringP("path", "p", "/usr/local/", "Installation path")
-	command.Flags().StringP("channel", "c", "release", "The channel to install from, can be 'releases' or 'nightly',")
+	command.Flags().StringP("channel", "c", "release", "The channel to install from, can be 'release' or 'nightly',")
 	command.Flags().Bool("progress", true, "Show download progress")
-	command.Flags().String("arch", "", "CPU architecture for Prometheus, eg: amd64")
+	command.Flags().String("arch", "", "CPU architecture i.e. amd64")
 
 	command.RunE = func(cmd *cobra.Command, args []string) error {
 		installPath, _ := cmd.Flags().GetString("path")
@@ -63,7 +76,7 @@ func MakeInstallNode() *cobra.Command {
 		progress, _ := cmd.Flags().GetBool("progress")
 		channel, _ := cmd.Flags().GetString("channel")
 
-		fmt.Printf("Installing Node.js to %s\n", installPath)
+		fmt.Printf("Installing Node.js to: %s\n", installPath)
 
 		arch, osVer := env.GetClientArch()
 
@@ -119,7 +132,7 @@ func MakeInstallNode() *cobra.Command {
 		}
 		defer os.RemoveAll(tempUnpackPath)
 		fmt.Printf("Unpacking binaries to: %s\n", tempUnpackPath)
-		if err = archive.UntarNested(f, tempUnpackPath); err != nil {
+		if err = archive.UntarNested(f, tempUnpackPath, true, false); err != nil {
 			return err
 		}
 

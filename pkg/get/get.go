@@ -5,7 +5,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -17,11 +17,12 @@ import (
 	"github.com/alexellis/arkade/pkg/env"
 )
 
+const GitHubVersionStrategy = "github"
+const GitLabVersionStrategy = "gitlab"
+const k8sVersionStrategy = "k8s"
+
 var supportedOS = [...]string{"linux", "darwin", "ming"}
 var supportedArchitectures = [...]string{"x86_64", "arm", "amd64", "armv6l", "armv7l", "arm64", "aarch64"}
-
-// githubTimeout expanded from the original 5 seconds due to #693
-var githubTimeout = time.Second * 10
 
 // Tool describes how to download a CLI tool from a binary
 // release - whether a single binary, or an archive.
@@ -63,6 +64,30 @@ type Tool struct {
 	NoExtension bool
 }
 
+type ReleaseLocation struct {
+	Url     string
+	Timeout time.Duration
+	Method  string
+}
+
+var releaseLocations = map[string]ReleaseLocation{
+	GitHubVersionStrategy: {
+		Url:     "https://github.com/%s/%s/releases/latest",
+		Timeout: time.Second * 10,
+		Method:  http.MethodHead,
+	},
+	GitLabVersionStrategy: {
+		Url:     "https://gitlab.com/%s/%s/-/releases/permalink/latest",
+		Timeout: time.Second * 5,
+		Method:  http.MethodHead,
+	},
+	k8sVersionStrategy: {
+		Url:     "https://cdn.dl.k8s.io/release/stable.txt",
+		Timeout: time.Second * 5,
+		Method:  http.MethodGet,
+	},
+}
+
 type ToolLocal struct {
 	Name string
 	Path string
@@ -86,6 +111,13 @@ func (tool Tool) IsArchive(quiet bool) (bool, error) {
 		strings.HasSuffix(downloadURL, "tgz"), nil
 }
 
+func isArchiveStr(downloadURL string) bool {
+
+	return strings.HasSuffix(downloadURL, "tar.gz") ||
+		strings.HasSuffix(downloadURL, "zip") ||
+		strings.HasSuffix(downloadURL, "tgz")
+}
+
 // GetDownloadURL fetches the download URL for a release of a tool
 // for a given os, architecture and version
 func GetDownloadURL(tool *Tool, os, arch, version string, quiet bool) (string, error) {
@@ -100,12 +132,12 @@ func GetDownloadURL(tool *Tool, os, arch, version string, quiet bool) (string, e
 }
 
 func GetToolVersion(tool *Tool, version string) string {
-	ver := tool.Version
+
 	if len(version) > 0 {
-		ver = version
+		return version
 	}
 
-	return ver
+	return tool.Version
 }
 
 func (tool Tool) Head(uri string) (int, string, http.Header, error) {
@@ -123,7 +155,7 @@ func (tool Tool) Head(uri string) (int, string, http.Header, error) {
 
 	var body string
 	if res.Body != nil {
-		b, _ := ioutil.ReadAll(res.Body)
+		b, _ := io.ReadAll(res.Body)
 		body = string(b)
 	}
 
@@ -132,22 +164,36 @@ func (tool Tool) Head(uri string) (int, string, http.Header, error) {
 
 func (tool Tool) GetURL(os, arch, version string, quiet bool) (string, error) {
 
-	if len(version) == 0 &&
-		(len(tool.URLTemplate) == 0 ||
-			strings.Contains(tool.URLTemplate, "https://github.com/") ||
-			tool.VersionStrategy == "github") {
+	if len(version) == 0 {
+
 		if !quiet {
-			log.Printf("Looking up version for %s", tool.Name)
+			log.Printf("Looking up version for: %s", tool.Name)
 		}
 
-		v, err := FindGitHubRelease(tool.Owner, tool.Repo)
-		if err != nil {
-			return "", err
+		var releaseType string
+		if len(tool.URLTemplate) == 0 ||
+			strings.Contains(tool.URLTemplate, "https://github.com/") {
+
+			releaseType = GitHubVersionStrategy
+
 		}
+
+		if len(tool.VersionStrategy) > 0 {
+			releaseType = tool.VersionStrategy
+		}
+
+		if _, supported := releaseLocations[releaseType]; supported {
+
+			v, err := FindRelease(releaseType, tool.Owner, tool.Repo)
+			if err != nil {
+				return "", err
+			}
+			version = v
+		}
+
 		if !quiet {
-			log.Printf("Found: %s", v)
+			log.Printf("Found: %s", version)
 		}
-		version = v
 	}
 
 	if len(tool.URLTemplate) > 0 {
@@ -187,14 +233,19 @@ func getURLByGithubTemplate(tool Tool, os, arch, version string) (string, error)
 }
 
 func FindGitHubRelease(owner, repo string) (string, error) {
-	url := fmt.Sprintf("https://github.com/%s/%s/releases/latest", owner, repo)
+	return FindRelease(GitHubVersionStrategy, owner, repo)
+}
 
-	client := makeHTTPClient(&githubTimeout, false)
+func FindRelease(location, owner, repo string) (string, error) {
+	url := formatUrl(releaseLocations[location].Url, owner, repo)
+
+	clientTimeout := releaseLocations[location].Timeout
+	client := makeHTTPClient(&clientTimeout, false)
 	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 		return http.ErrUseLastResponse
 	}
 
-	req, err := http.NewRequest(http.MethodHead, url, nil)
+	req, err := http.NewRequest(releaseLocations[location].Method, url, nil)
 	if err != nil {
 		return "", err
 	}
@@ -206,21 +257,41 @@ func FindGitHubRelease(owner, repo string) (string, error) {
 		return "", err
 	}
 
-	if res.Body != nil {
-		defer res.Body.Close()
+	defer res.Body.Close()
+
+	if releaseLocations[location].Method == http.MethodHead {
+
+		if res.StatusCode != http.StatusMovedPermanently && res.StatusCode != http.StatusFound {
+			return "", fmt.Errorf("server returned status: %d", res.StatusCode)
+		}
+
+		loc := res.Header.Get("Location")
+		if len(loc) == 0 {
+			return "", fmt.Errorf("unable to determine release of tool")
+		}
+
+		version := loc[strings.LastIndex(loc, "/")+1:]
+		return version, nil
 	}
 
-	if res.StatusCode != 302 {
-		return "", fmt.Errorf("server returned status: %d", res.StatusCode)
-	}
-
-	loc := res.Header.Get("Location")
-	if len(loc) == 0 {
+	if res.Body == nil {
 		return "", fmt.Errorf("unable to determine release of tool")
 	}
 
-	version := loc[strings.LastIndex(loc, "/")+1:]
+	bodyBytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		return "", err
+	}
+
+	version := string(bodyBytes)
 	return version, nil
+}
+
+func formatUrl(url, owner, repo string) string {
+	if strings.Contains(url, "%s") {
+		return fmt.Sprintf(url, owner, repo)
+	}
+	return url
 }
 
 func getBinaryURL(owner, repo, version, downloadName string) string {
@@ -379,14 +450,13 @@ func PostToolNotFoundMsg(url string) string {
 }
 
 // PostInstallationMsg generates installation message after tool has been downloaded
-func PostInstallationMsg(dlMode int, localToolsStore []ToolLocal) ([]byte, error) {
+func PostInstallationMsg(movePath string, localToolsStore []ToolLocal) ([]byte, error) {
 
 	t := template.New("Installation Instructions")
 
-	if dlMode == DownloadTempDir {
+	if movePath != "" {
 		t.Parse(`Run the following to copy to install the tool:
 
-chmod +x {{range .}}{{.Path}} {{end}}
 {{- range . }}
 sudo install -m 755 {{.Path}} /usr/local/bin/{{.Name}}
 {{- end}}`)
@@ -425,7 +495,7 @@ func ValidateOS(name string) error {
 		}
 	}
 
-	return fmt.Errorf("operating system %q is not supported. Available prefixes: %s.",
+	return fmt.Errorf("operating system %q is not supported. Available prefixes: %s",
 		name, strings.Join(supportedOS[:], ", "))
 }
 
@@ -436,6 +506,6 @@ func ValidateArch(name string) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("cpu architecture %q is not supported. Available: %s.",
+	return fmt.Errorf("cpu architecture %q is not supported. Available: %s",
 		name, strings.Join(supportedArchitectures[:], ", "))
 }

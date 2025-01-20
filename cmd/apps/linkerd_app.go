@@ -5,6 +5,7 @@ package apps
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -18,11 +19,11 @@ import (
 
 	"github.com/alexellis/arkade/pkg/config"
 	"github.com/alexellis/arkade/pkg/env"
-	execute "github.com/alexellis/go-execute/pkg/v1"
+	execute "github.com/alexellis/go-execute/v2"
 	"github.com/spf13/cobra"
 )
 
-var linkerdVersion = "stable-2.11.1"
+var linkerdVersion = "stable-2.13.0"
 
 func MakeInstallLinkerd() *cobra.Command {
 	var linkerd = &cobra.Command{
@@ -151,7 +152,8 @@ func downloadLinkerd(userPath, arch, clientOS, version string) error {
 			quiet    bool
 		)
 
-		outPath, finalName, err := get.Download(tool, arch, clientOS, version, get.DownloadArkadeDir, progress, quiet)
+		defaultMovePath := ""
+		outPath, finalName, err := get.Download(tool, arch, clientOS, version, defaultMovePath, progress, quiet)
 		if err != nil {
 			return err
 		}
@@ -166,13 +168,13 @@ func downloadLinkerd(userPath, arch, clientOS, version string) error {
 
 func linkerdCli(parts ...string) (execute.ExecResult, error) {
 	task := execute.ExecTask{
-		Command:     fmt.Sprintf("%s", env.LocalBinary("linkerd2", "")),
+		Command:     env.LocalBinary("linkerd2", ""),
 		Args:        parts,
 		Env:         os.Environ(),
 		StreamStdio: true,
 	}
 
-	res, err := task.Execute()
+	res, err := task.Execute(context.Background())
 
 	if err != nil {
 		return res, err
