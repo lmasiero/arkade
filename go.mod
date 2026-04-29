@@ -1,4 +1,4 @@
-module github.com/alexellis/arkade
+module github.com/lmasiero/arkade
 
 go 1.25.0
 
