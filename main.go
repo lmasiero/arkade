@@ -4,17 +4,15 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
-	"github.com/alexellis/arkade/cmd"
-	"github.com/alexellis/arkade/cmd/chart"
-	"github.com/alexellis/arkade/cmd/docker"
-	"github.com/alexellis/arkade/cmd/fstail"
-	"github.com/alexellis/arkade/cmd/gha"
-	"github.com/alexellis/arkade/cmd/oci"
-	"github.com/alexellis/arkade/cmd/system"
-	"github.com/alexellis/arkade/pkg"
+	"github.com/lmasiero/arkade/cmd"
+	"github.com/lmasiero/arkade/cmd/chart"
+	"github.com/lmasiero/arkade/cmd/docker"
+	"github.com/lmasiero/arkade/cmd/fstail"
+	"github.com/lmasiero/arkade/cmd/gha"
+	"github.com/lmasiero/arkade/cmd/oci"
+	"github.com/lmasiero/arkade/cmd/system"
 	"github.com/spf13/cobra"
 )
 
@@ -25,13 +23,6 @@ func main() {
 		Use: "arkade",
 		Run: func(cmd *cobra.Command, args []string) {
 			printarkadeASCIIArt()
-			short := "n/a"
-			if len(pkg.GitCommit) > 12 {
-				short = pkg.GitCommit[:12]
-			} else if len(pkg.GitCommit) > 0 {
-				short = pkg.GitCommit
-			}
-			fmt.Printf("Version: %s (%s)\n\n\n", pkg.BuildString(), short)
 			cmd.Help()
 		},
 	}
@@ -52,7 +43,6 @@ func main() {
 	rootCmd.AddCommand(gha.MakeGHA())
 	rootCmd.AddCommand(system.MakeSystem())
 	rootCmd.AddCommand(oci.MakeOci())
-	rootCmd.AddCommand(cmd.MakeSearch())
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)

@@ -173,10 +173,7 @@ func MakeInstallOpenFaaS() *cobra.Command {
 
 		if command.Flags().Changed("pull-policy") {
 			overrides["openfaasImagePullPolicy"] = pullPolicy
-		}
-
-		if command.Flags().Changed("function-pull-policy") {
-			overrides["functions.imagePullPolicy"] = functionPullPolicy
+			overrides["faasnetes.imagePullPolicy"] = functionPullPolicy
 		}
 
 		if command.Flags().Changed("gateways") {

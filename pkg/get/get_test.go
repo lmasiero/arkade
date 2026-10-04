@@ -2,7 +2,6 @@ package get
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -33,58 +32,6 @@ func getTool(name string, tools []Tool) *Tool {
 		}
 	}
 	return tool
-}
-
-func Test_DownloadActionlint(t *testing.T) {
-	tools := MakeTools()
-	name := "actionlint"
-
-	tool := getTool(name, tools)
-
-	const toolVersion = "v1.7.12"
-
-	tests := []test{
-		{
-			os:      "linux",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz",
-		},
-		{
-			os:      "linux",
-			arch:    archARM64,
-			version: toolVersion,
-			url:     "https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_arm64.tar.gz",
-		},
-		{
-			os:      "darwin",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_darwin_amd64.tar.gz",
-		},
-		{
-			os:      "darwin",
-			arch:    archDarwinARM64,
-			version: toolVersion,
-			url:     "https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_darwin_arm64.tar.gz",
-		},
-		{
-			os:      "ming",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_windows_amd64.zip",
-		},
-	}
-
-	for _, tc := range tests {
-		got, _, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if got != tc.url {
-			t.Errorf("want: %s, got: %s", tc.url, got)
-		}
-	}
 }
 
 func Test_DownloadRipgrep(t *testing.T) {
@@ -135,242 +82,6 @@ func Test_DownloadRipgrep(t *testing.T) {
 		}
 		if got != tc.url {
 			t.Errorf("want: %s, got: %s", tc.url, got)
-		}
-	}
-}
-
-func Test_DownloadVzzn(t *testing.T) {
-	tools := MakeTools()
-	name := "vzzn"
-
-	tool := getTool(name, tools)
-
-	const toolVersion = "v0.0.1"
-
-	tests := []test{
-		{
-			os:      "linux",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/alexellis/vzzn/releases/download/v0.0.1/vzzn",
-		},
-		{
-			os:      "linux",
-			arch:    archARM64,
-			version: toolVersion,
-			url:     "https://github.com/alexellis/vzzn/releases/download/v0.0.1/vzzn-arm64",
-		},
-		{
-			os:      "linux",
-			arch:    archARM7,
-			version: toolVersion,
-			url:     "https://github.com/alexellis/vzzn/releases/download/v0.0.1/vzzn-armhf",
-		},
-		{
-			os:      "darwin",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/alexellis/vzzn/releases/download/v0.0.1/vzzn-darwin",
-		},
-		{
-			os:      "darwin",
-			arch:    archDarwinARM64,
-			version: toolVersion,
-			url:     "https://github.com/alexellis/vzzn/releases/download/v0.0.1/vzzn-darwin-arm64",
-		},
-		{
-			os:      "ming",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/alexellis/vzzn/releases/download/v0.0.1/vzzn.exe",
-		},
-		{
-			os:      "linux",
-			arch:    "amd64",
-			version: toolVersion,
-			url:     "https://github.com/alexellis/vzzn/releases/download/v0.0.1/vzzn",
-		},
-		{
-			os:      "linux",
-			arch:    "arm64",
-			version: toolVersion,
-			url:     "https://github.com/alexellis/vzzn/releases/download/v0.0.1/vzzn-arm64",
-		},
-		{
-			os:      "ming",
-			arch:    "amd64",
-			version: toolVersion,
-			url:     "https://github.com/alexellis/vzzn/releases/download/v0.0.1/vzzn.exe",
-		},
-		{
-			os:      "linux",
-			arch:    "armv6l",
-			version: toolVersion,
-			url:     "https://github.com/alexellis/vzzn/releases/download/v0.0.1/vzzn-unsupported",
-		},
-	}
-	verify := false
-	for _, tc := range tests {
-		got, _, err := tool.GetURL(tc.os, tc.arch, tc.version, verify)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if got != tc.url {
-			t.Errorf("want: %s, got: %s", tc.url, got)
-		}
-	}
-}
-
-func Test_DownloadK8sgpt(t *testing.T) {
-	tools := MakeTools()
-	name := "k8sgpt"
-
-	tool := getTool(name, tools)
-
-	const toolVersion = "v0.4.36"
-
-	tests := []test{
-		{
-			os:      "linux",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/k8sgpt-ai/k8sgpt/releases/download/v0.4.36/k8sgpt_Linux_x86_64.tar.gz",
-		},
-		{
-			os:      "linux",
-			arch:    archARM64,
-			version: toolVersion,
-			url:     "https://github.com/k8sgpt-ai/k8sgpt/releases/download/v0.4.36/k8sgpt_Linux_arm64.tar.gz",
-		},
-		{
-			os:      "linux",
-			arch:    archDarwinARM64,
-			version: toolVersion,
-			url:     "https://github.com/k8sgpt-ai/k8sgpt/releases/download/v0.4.36/k8sgpt_Linux_arm64.tar.gz",
-		},
-		{
-			os:      "darwin",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/k8sgpt-ai/k8sgpt/releases/download/v0.4.36/k8sgpt_Darwin_x86_64.tar.gz",
-		},
-		{
-			os:      "darwin",
-			arch:    archDarwinARM64,
-			version: toolVersion,
-			url:     "https://github.com/k8sgpt-ai/k8sgpt/releases/download/v0.4.36/k8sgpt_Darwin_arm64.tar.gz",
-		},
-		{
-			os:      "darwin",
-			arch:    archARM64,
-			version: toolVersion,
-			url:     "https://github.com/k8sgpt-ai/k8sgpt/releases/download/v0.4.36/k8sgpt_Darwin_arm64.tar.gz",
-		},
-		{
-			os:      "ming",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/k8sgpt-ai/k8sgpt/releases/download/v0.4.36/k8sgpt_Windows_x86_64.zip",
-		},
-		{
-			os:      "ming",
-			arch:    archARM64,
-			version: toolVersion,
-			url:     "https://github.com/k8sgpt-ai/k8sgpt/releases/download/v0.4.36/k8sgpt_Windows_arm64.zip",
-		},
-	}
-	verify := false
-	for _, tc := range tests {
-		got, _, err := tool.GetURL(tc.os, tc.arch, tc.version, verify)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if got != tc.url {
-			t.Errorf("want: %s, got: %s", tc.url, got)
-		}
-	}
-}
-
-func Test_DownloadRestic(t *testing.T) {
-	tools := MakeTools()
-	name := "restic"
-
-	tool := getTool(name, tools)
-
-	const toolVersion = "v0.19.0"
-
-	tests := []test{
-		{
-			os:      "linux",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/restic/restic/releases/download/v0.19.0/restic_0.19.0_linux_amd64.bz2",
-		},
-		{
-			os:      "linux",
-			arch:    archARM64,
-			version: toolVersion,
-			url:     "https://github.com/restic/restic/releases/download/v0.19.0/restic_0.19.0_linux_arm64.bz2",
-		},
-		{
-			os:      "darwin",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/restic/restic/releases/download/v0.19.0/restic_0.19.0_darwin_amd64.bz2",
-		},
-		{
-			os:      "darwin",
-			arch:    archDarwinARM64,
-			version: toolVersion,
-			url:     "https://github.com/restic/restic/releases/download/v0.19.0/restic_0.19.0_darwin_arm64.bz2",
-		},
-		{
-			os:      "ming",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/restic/restic/releases/download/v0.19.0/restic_0.19.0_windows_amd64.zip",
-		},
-	}
-
-	for _, tc := range tests {
-		got, _, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
-		if err != nil {
-			t.Errorf("Got error for %s/%s: %v", tc.os, tc.arch, err)
-		}
-		if got != tc.url {
-			t.Errorf("Want:\n%s\nGot:\n%s", tc.url, got)
-		}
-	}
-}
-
-func Test_DownloadCrc(t *testing.T) {
-	tools := MakeTools()
-	name := "crc"
-
-	tool := getTool(name, tools)
-
-	tests := []test{
-		{
-			os:      "linux",
-			arch:    arch64bit,
-			version: "2.62.0",
-			url:     "https://mirror.openshift.com/pub/openshift-v4/clients/crc/2.62.0/crc-linux-amd64.tar.xz",
-		},
-		{
-			os:      "linux",
-			arch:    archARM64,
-			version: "2.62.0",
-			url:     "https://mirror.openshift.com/pub/openshift-v4/clients/crc/2.62.0/crc-linux-arm64.tar.xz",
-		},
-	}
-
-	for _, tc := range tests {
-		got, _, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
-		if err != nil {
-			t.Errorf("Got error for %s/%s: %v", tc.os, tc.arch, err)
-		}
-		if got != tc.url {
-			t.Errorf("Want:\n%s\nGot:\n%s", tc.url, got)
 		}
 	}
 }
@@ -491,25 +202,6 @@ func Test_FormatUrl(t *testing.T) {
 				t.Fatalf("\nwant: %s\ngot:  %s", tc.expected, result)
 			}
 		})
-	}
-}
-
-func TestRetryWithBackoffDoesNotRetryURLParseErrors(t *testing.T) {
-	attempts := 0
-	_, requestErr := http.NewRequest(http.MethodGet, "https://example.com/%!(EXTRA string=vagrant)", nil)
-	if requestErr == nil {
-		t.Fatal("expected malformed URL to return an error")
-	}
-
-	_, err := retryWithBackoff(func() (string, error) {
-		attempts++
-		return "", requestErr
-	}, 10, 0)
-	if err == nil {
-		t.Fatal("expected retryWithBackoff to return the URL parse error")
-	}
-	if attempts != 1 {
-		t.Fatalf("expected one attempt for a URL parse error, got %d", attempts)
 	}
 }
 
@@ -1050,48 +742,6 @@ func Test_Download_ActuatedCLI(t *testing.T) {
 	}
 }
 
-func Test_DownloadAct(t *testing.T) {
-	tools := MakeTools()
-	name := "act"
-
-	tool := getTool(name, tools)
-
-	const toolVersion = "v0.2.89"
-
-	tests := []test{
-		{os: "darwin",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/nektos/act/releases/download/v0.2.89/act_Darwin_x86_64.tar.gz"},
-		{os: "darwin",
-			arch:    archDarwinARM64,
-			version: toolVersion,
-			url:     "https://github.com/nektos/act/releases/download/v0.2.89/act_Darwin_arm64.tar.gz"},
-		{os: "linux",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/nektos/act/releases/download/v0.2.89/act_Linux_x86_64.tar.gz"},
-		{os: "linux",
-			arch:    archARM64,
-			version: toolVersion,
-			url:     "https://github.com/nektos/act/releases/download/v0.2.89/act_Linux_arm64.tar.gz"},
-		{os: "mingw64_nt-10.0-18362",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/nektos/act/releases/download/v0.2.89/act_Windows_x86_64.zip"},
-	}
-
-	for _, tc := range tests {
-		got, _, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if got != tc.url {
-			t.Fatalf("want: %s, got: %s", tc.url, got)
-		}
-	}
-}
-
 func Test_Download_mixctl(t *testing.T) {
 	tools := MakeTools()
 	name := "mixctl"
@@ -1217,27 +867,27 @@ func Test_DownloadKubeseal(t *testing.T) {
 		{os: "mingw64_nt-10.0-18362",
 			arch:    arch64bit,
 			version: "v0.17.4",
-			url:     "https://github.com/bitnami/sealed-secrets/releases/download/v0.17.4/kubeseal-0.17.4-windows-amd64.tar.gz"},
+			url:     "https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.17.4/kubeseal-0.17.4-windows-amd64.tar.gz"},
 		{os: "linux",
 			arch:    arch64bit,
 			version: "v0.17.4",
-			url:     "https://github.com/bitnami/sealed-secrets/releases/download/v0.17.4/kubeseal-0.17.4-linux-amd64.tar.gz"},
+			url:     "https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.17.4/kubeseal-0.17.4-linux-amd64.tar.gz"},
 		{os: "darwin",
 			arch:    archDarwinARM64,
 			version: "v0.17.4",
-			url:     "https://github.com/bitnami/sealed-secrets/releases/download/v0.17.4/kubeseal-0.17.4-darwin-arm64.tar.gz"},
+			url:     "https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.17.4/kubeseal-0.17.4-darwin-arm64.tar.gz"},
 		{os: "darwin",
 			arch:    arch64bit,
 			version: "v0.17.4",
-			url:     "https://github.com/bitnami/sealed-secrets/releases/download/v0.17.4/kubeseal-0.17.4-darwin-amd64.tar.gz"},
+			url:     "https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.17.4/kubeseal-0.17.4-darwin-amd64.tar.gz"},
 		{os: "linux",
 			arch:    archARM7,
 			version: "v0.17.4",
-			url:     "https://github.com/bitnami/sealed-secrets/releases/download/v0.17.4/kubeseal-0.17.4-linux-arm.tar.gz"},
+			url:     "https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.17.4/kubeseal-0.17.4-linux-arm.tar.gz"},
 		{os: "linux",
 			arch:    archARM64,
 			version: "v0.17.4",
-			url:     "https://github.com/bitnami/sealed-secrets/releases/download/v0.17.4/kubeseal-0.17.4-linux-arm64.tar.gz"},
+			url:     "https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.17.4/kubeseal-0.17.4-linux-arm64.tar.gz"},
 	}
 	for _, tc := range tests {
 		got, _, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
@@ -1986,90 +1636,6 @@ func Test_DownloadK9s(t *testing.T) {
 	}
 }
 
-func Test_DownloadK6(t *testing.T) {
-	tools := MakeTools()
-	name := "k6"
-
-	tool := getTool(name, tools)
-
-	const toolVersion = "v2.1.0"
-
-	tests := []test{
-		{os: "darwin",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/grafana/k6/releases/download/v2.1.0/k6-v2.1.0-macos-amd64.zip"},
-		{os: "darwin",
-			arch:    archDarwinARM64,
-			version: toolVersion,
-			url:     "https://github.com/grafana/k6/releases/download/v2.1.0/k6-v2.1.0-macos-arm64.zip"},
-		{os: "linux",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/grafana/k6/releases/download/v2.1.0/k6-v2.1.0-linux-amd64.tar.gz"},
-		{os: "linux",
-			arch:    archARM64,
-			version: toolVersion,
-			url:     "https://github.com/grafana/k6/releases/download/v2.1.0/k6-v2.1.0-linux-arm64.tar.gz"},
-		{os: "mingw64_nt-10.0-18362",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/grafana/k6/releases/download/v2.1.0/k6-v2.1.0-windows-amd64.zip"},
-	}
-
-	for _, tc := range tests {
-		got, _, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if got != tc.url {
-			t.Errorf("want: %s, got: %s", tc.url, got)
-		}
-	}
-}
-
-func Test_DownloadKo(t *testing.T) {
-	tools := MakeTools()
-	name := "ko"
-
-	tool := getTool(name, tools)
-
-	const toolVersion = "v0.19.1"
-
-	tests := []test{
-		{os: "darwin",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/ko-build/ko/releases/download/v0.19.1/ko_0.19.1_Darwin_x86_64.tar.gz"},
-		{os: "darwin",
-			arch:    archDarwinARM64,
-			version: toolVersion,
-			url:     "https://github.com/ko-build/ko/releases/download/v0.19.1/ko_0.19.1_Darwin_arm64.tar.gz"},
-		{os: "linux",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/ko-build/ko/releases/download/v0.19.1/ko_0.19.1_Linux_x86_64.tar.gz"},
-		{os: "linux",
-			arch:    archARM64,
-			version: toolVersion,
-			url:     "https://github.com/ko-build/ko/releases/download/v0.19.1/ko_0.19.1_Linux_arm64.tar.gz"},
-		{os: "mingw64_nt-10.0-18362",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/ko-build/ko/releases/download/v0.19.1/ko_0.19.1_Windows_x86_64.tar.gz"},
-	}
-
-	for _, tc := range tests {
-		got, _, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if got != tc.url {
-			t.Errorf("want: %s, got: %s", tc.url, got)
-		}
-	}
-}
-
 func Test_DownloadPopeye(t *testing.T) {
 	tools := MakeTools()
 	name := "popeye"
@@ -2746,48 +2312,6 @@ func Test_DownloadOpa(t *testing.T) {
 	}
 }
 
-func Test_DownloadOras(t *testing.T) {
-	tools := MakeTools()
-	name := "oras"
-
-	tool := getTool(name, tools)
-
-	const toolVersion = "v1.3.2"
-
-	tests := []test{
-		{os: "darwin",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/oras-project/oras/releases/download/v1.3.2/oras_1.3.2_darwin_amd64.tar.gz"},
-		{os: "darwin",
-			arch:    archDarwinARM64,
-			version: toolVersion,
-			url:     "https://github.com/oras-project/oras/releases/download/v1.3.2/oras_1.3.2_darwin_arm64.tar.gz"},
-		{os: "linux",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/oras-project/oras/releases/download/v1.3.2/oras_1.3.2_linux_amd64.tar.gz"},
-		{os: "linux",
-			arch:    archARM64,
-			version: toolVersion,
-			url:     "https://github.com/oras-project/oras/releases/download/v1.3.2/oras_1.3.2_linux_arm64.tar.gz"},
-		{os: "mingw64_nt-10.0-18362",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/oras-project/oras/releases/download/v1.3.2/oras_1.3.2_windows_amd64.zip"},
-	}
-
-	for _, tc := range tests {
-		got, _, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if got != tc.url {
-			t.Errorf("want: %s, got: %s", tc.url, got)
-		}
-	}
-}
-
 func Test_getBinaryURL_SlashInDownloadPath(t *testing.T) {
 	got := getBinaryURL("roboll", "helmfile", "0.134.0", "v0.134.0/helmfile_0.134.0_darwin_amd64")
 	want := "https://github.com/roboll/helmfile/releases/download/v0.134.0/helmfile_0.134.0_darwin_amd64"
@@ -2956,47 +2480,48 @@ func Test_DownloadMinio(t *testing.T) {
 
 	tool := getTool(name, tools)
 
-	// MinIO moved distribution from dl.min.io (now 410 Gone) to GitHub
-	// releases, with assets named mc.{os}-{arch}.{RELEASE_TAG}.
-	version := "RELEASE.2025-08-13T08-35-41Z"
-
 	tests := []test{
 		{
-			os:      "ming",
-			arch:    "amd64",
-			version: version,
-			url:     `https://github.com/minio/mc/releases/download/RELEASE.2025-08-13T08-35-41Z/mc.windows-amd64.RELEASE.2025-08-13T08-35-41Z.exe`,
+			os:   "ming",
+			arch: "amd64",
+			url:  `https://dl.min.io/client/mc/release/windows-amd64/mc.exe`,
 		},
 		{
-			os:      "linux",
-			arch:    "amd64",
-			version: version,
-			url:     `https://github.com/minio/mc/releases/download/RELEASE.2025-08-13T08-35-41Z/mc.linux-amd64.RELEASE.2025-08-13T08-35-41Z`,
+			os:   "linux",
+			arch: "amd64",
+			url:  `https://dl.min.io/client/mc/release/linux-amd64/mc`,
 		},
 		{
-			os:      "linux",
-			arch:    archARM64,
-			version: version,
-			url:     `https://github.com/minio/mc/releases/download/RELEASE.2025-08-13T08-35-41Z/mc.linux-arm64.RELEASE.2025-08-13T08-35-41Z`,
+			os:   "linux",
+			arch: "arm",
+			url:  `https://dl.min.io/client/mc/release/linux-arm/mc`,
 		},
 		{
-			os:      "darwin",
-			arch:    "amd64",
-			version: version,
-			url:     `https://github.com/minio/mc/releases/download/RELEASE.2025-08-13T08-35-41Z/mc.darwin-amd64.RELEASE.2025-08-13T08-35-41Z`,
+			os:   "linux",
+			arch: "armv6l",
+			url:  `https://dl.min.io/client/mc/release/linux-arm/mc`,
 		},
 		{
-			os:      "darwin",
-			arch:    archARM64,
-			version: version,
-			url:     `https://github.com/minio/mc/releases/download/RELEASE.2025-08-13T08-35-41Z/mc.darwin-arm64.RELEASE.2025-08-13T08-35-41Z`,
+			os:   "linux",
+			arch: archARM7,
+			url:  `https://dl.min.io/client/mc/release/linux-arm/mc`,
+		},
+		{
+			os:   "linux",
+			arch: archARM64,
+			url:  `https://dl.min.io/client/mc/release/linux-arm64/mc`,
+		},
+		{
+			os:   "darwin",
+			arch: "amd64",
+			url:  `https://dl.min.io/client/mc/release/darwin-amd64/mc`,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.os+" "+tc.arch+" "+tc.version, func(t *testing.T) {
 
-			got, _, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
+			got, _, err := tool.GetURL(tc.os, tc.arch, "", false)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -3357,25 +2882,25 @@ func Test_DownloadInfluxCli(t *testing.T) {
 		{
 			os:      "windows",
 			arch:    arch64bit,
-			version: "v2.0.7",
+			version: "2.0.7",
 			url:     `https://dl.influxdata.com/influxdb/releases/influxdb2-client-2.0.7-windows-amd64.tar.gz`,
 		},
 		{
 			os:      "linux",
 			arch:    arch64bit,
-			version: "v2.0.7",
+			version: "2.0.7",
 			url:     `https://dl.influxdata.com/influxdb/releases/influxdb2-client-2.0.7-linux-amd64.tar.gz`,
 		},
 		{
 			os:      "linux",
 			arch:    archARM64,
-			version: "v2.0.7",
+			version: "2.0.7",
 			url:     `https://dl.influxdata.com/influxdb/releases/influxdb2-client-2.0.7-linux-arm64.tar.gz`,
 		},
 		{
 			os:      "darwin",
 			arch:    arch64bit,
-			version: "v2.0.7",
+			version: "2.0.7",
 			url:     `https://dl.influxdata.com/influxdb/releases/influxdb2-client-2.0.7-darwin-amd64.tar.gz`,
 		},
 	}
@@ -3390,42 +2915,6 @@ func Test_DownloadInfluxCli(t *testing.T) {
 		}
 	}
 
-}
-
-func Test_DownloadVagrant(t *testing.T) {
-	tools := MakeTools()
-	tool := getTool("vagrant", tools)
-
-	tests := []test{
-		{
-			os:      "linux",
-			arch:    arch64bit,
-			version: "v2.4.9",
-			url:     "https://releases.hashicorp.com/vagrant/2.4.9/vagrant_2.4.9_linux_amd64.zip",
-		},
-		{
-			os:      "darwin",
-			arch:    arch64bit,
-			version: "v2.4.9",
-			url:     "https://releases.hashicorp.com/vagrant/2.4.9/vagrant_2.4.9_darwin_amd64.zip",
-		},
-		{
-			os:      "ming",
-			arch:    arch64bit,
-			version: "v2.4.9",
-			url:     "https://releases.hashicorp.com/vagrant/2.4.9/vagrant_2.4.9_windows_amd64.zip",
-		},
-	}
-
-	for _, tc := range tests {
-		got, _, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if got != tc.url {
-			t.Errorf("want: %s, got: %s", tc.url, got)
-		}
-	}
 }
 
 func Test_DownloadInletsProCli(t *testing.T) {
@@ -3614,10 +3103,9 @@ func Test_DownloadCodex(t *testing.T) {
 
 }
 
-func Test_DownloadCodexCodeModeHost(t *testing.T) {
+func Test_DownloadKim(t *testing.T) {
 	tools := MakeTools()
-	name := "codex-code-mode-host"
-	const version = "rust-v0.89.0"
+	name := "kim"
 
 	tool := getTool(name, tools)
 
@@ -3625,101 +3113,26 @@ func Test_DownloadCodexCodeModeHost(t *testing.T) {
 		{
 			os:      "ming",
 			arch:    arch64bit,
-			version: version,
-			url:     `https://github.com/openai/codex/releases/download/rust-v0.89.0/codex-code-mode-host-x86_64-pc-windows-msvc.exe.zip`,
-		},
-		{
-			os:      "ming",
-			arch:    archARM64,
-			version: version,
-			url:     `https://github.com/openai/codex/releases/download/rust-v0.89.0/codex-code-mode-host-aarch64-pc-windows-msvc.exe.zip`,
+			version: "v0.1.0-alpha.12",
+			url:     `https://github.com/rancher/kim/releases/download/v0.1.0-alpha.12/kim-windows-amd64.exe`,
 		},
 		{
 			os:      "linux",
 			arch:    arch64bit,
-			version: version,
-			url:     `https://github.com/openai/codex/releases/download/rust-v0.89.0/codex-code-mode-host-x86_64-unknown-linux-musl.tar.gz`,
+			version: "v0.1.0-alpha.12",
+			url:     `https://github.com/rancher/kim/releases/download/v0.1.0-alpha.12/kim-linux-amd64`,
 		},
 		{
 			os:      "linux",
 			arch:    archARM64,
-			version: version,
-			url:     `https://github.com/openai/codex/releases/download/rust-v0.89.0/codex-code-mode-host-aarch64-unknown-linux-musl.tar.gz`,
+			version: "v0.1.0-alpha.12",
+			url:     `https://github.com/rancher/kim/releases/download/v0.1.0-alpha.12/kim-linux-arm64`,
 		},
 		{
 			os:      "darwin",
 			arch:    arch64bit,
-			version: version,
-			url:     `https://github.com/openai/codex/releases/download/rust-v0.89.0/codex-code-mode-host-x86_64-apple-darwin.tar.gz`,
-		},
-		{
-			os:      "darwin",
-			arch:    archDarwinARM64,
-			version: version,
-			url:     `https://github.com/openai/codex/releases/download/rust-v0.89.0/codex-code-mode-host-aarch64-apple-darwin.tar.gz`,
-		},
-	}
-
-	for _, tc := range tests {
-		got, _, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if got != tc.url {
-			t.Errorf("want: %s, got: %s", tc.url, got)
-		}
-	}
-
-}
-
-func Test_DownloadKimi(t *testing.T) {
-	tools := MakeTools()
-	name := "kimi"
-
-	tool := getTool(name, tools)
-
-	tests := []test{
-		{
-			os:      "linux",
-			arch:    arch64bit,
-			version: "1.49.0",
-			url:     `https://github.com/MoonshotAI/kimi-cli/releases/download/1.49.0/kimi-1.49.0-x86_64-unknown-linux-gnu.tar.gz`,
-			binary:  "kimi",
-		},
-		{
-			os:      "linux",
-			arch:    archARM64,
-			version: "1.49.0",
-			url:     `https://github.com/MoonshotAI/kimi-cli/releases/download/1.49.0/kimi-1.49.0-aarch64-unknown-linux-gnu.tar.gz`,
-			binary:  "kimi",
-		},
-		{
-			os:      "darwin",
-			arch:    arch64bit,
-			version: "1.49.0",
-			url:     `https://github.com/MoonshotAI/kimi-cli/releases/download/1.49.0/kimi-1.49.0-x86_64-apple-darwin.tar.gz`,
-			binary:  "kimi",
-		},
-		{
-			os:      "darwin",
-			arch:    archDarwinARM64,
-			version: "1.49.0",
-			url:     `https://github.com/MoonshotAI/kimi-cli/releases/download/1.49.0/kimi-1.49.0-aarch64-apple-darwin.tar.gz`,
-			binary:  "kimi",
-		},
-		{
-			os:      "mingw64_nt-10.0-18362",
-			arch:    arch64bit,
-			version: "1.49.0",
-			url:     `https://github.com/MoonshotAI/kimi-cli/releases/download/1.49.0/kimi-1.49.0-x86_64-pc-windows-msvc.zip`,
-			binary:  "kimi",
-		},
-		{
-			os:      "windows",
-			arch:    arch64bit,
-			version: "1.49.0",
-			url:     `https://github.com/MoonshotAI/kimi-cli/releases/download/1.49.0/kimi-1.49.0-x86_64-pc-windows-msvc.zip`,
-			binary:  "kimi",
+			version: "v0.1.0-alpha.12",
+			url:     `https://github.com/rancher/kim/releases/download/v0.1.0-alpha.12/kim-darwin-amd64`,
 		},
 	}
 
@@ -3731,15 +3144,6 @@ func Test_DownloadKimi(t *testing.T) {
 			}
 			if got != tc.url {
 				r.Errorf("\nwant: %s\ngot:  %s", tc.url, got)
-			}
-			if len(tc.binary) > 0 {
-				binary, err := GetBinaryName(tool, tc.os, tc.arch, tc.version)
-				if err != nil {
-					r.Fatal(err)
-				}
-				if binary != tc.binary {
-					r.Errorf("\nwant: %s\ngot:  %s", tc.binary, binary)
-				}
 			}
 		})
 	}
@@ -3845,25 +3249,25 @@ func Test_DownloadPolarisCli(t *testing.T) {
 			os:      "darwin",
 			arch:    arch64bit,
 			version: "v3.2.1",
-			url:     `https://github.com/FairwindsOps/polaris/releases/download/v3.2.1/polaris_3.2.1_darwin_amd64.tar.gz`,
+			url:     `https://github.com/FairwindsOps/polaris/releases/download/v3.2.1/polaris_darwin_amd64.tar.gz`,
 		},
 		{
 			os:      "linux",
 			arch:    arch64bit,
 			version: "v3.2.1",
-			url:     `https://github.com/FairwindsOps/polaris/releases/download/v3.2.1/polaris_3.2.1_linux_amd64.tar.gz`,
+			url:     `https://github.com/FairwindsOps/polaris/releases/download/v3.2.1/polaris_linux_amd64.tar.gz`,
 		},
 		{
 			os:      "linux",
 			arch:    archARM64,
 			version: "v3.2.1",
-			url:     `https://github.com/FairwindsOps/polaris/releases/download/v3.2.1/polaris_3.2.1_linux_arm64.tar.gz`,
+			url:     `https://github.com/FairwindsOps/polaris/releases/download/v3.2.1/polaris_linux_arm64.tar.gz`,
 		},
 		{
 			os:      "linux",
 			arch:    archARM7,
 			version: "v3.2.1",
-			url:     `https://github.com/FairwindsOps/polaris/releases/download/v3.2.1/polaris_3.2.1_linux_armv7.tar.gz`,
+			url:     `https://github.com/FairwindsOps/polaris/releases/download/v3.2.1/polaris_linux_armv7.tar.gz`,
 		},
 	}
 
@@ -4004,60 +3408,6 @@ func Test_DownloadNovaCli(t *testing.T) {
 			arch:    archARM7,
 			version: "2.3.2",
 			url:     `https://github.com/FairwindsOps/nova/releases/download/2.3.2/nova_2.3.2_linux_armv7.tar.gz`,
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.os+" "+tc.arch+" "+tc.version, func(r *testing.T) {
-
-			got, _, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if got != tc.url {
-				t.Errorf("want: %s, got: %s", tc.url, got)
-			}
-		})
-	}
-
-}
-
-func Test_DownloadPlutoCli(t *testing.T) {
-	tools := MakeTools()
-	name := "pluto"
-
-	tool := getTool(name, tools)
-
-	tests := []test{
-		{
-			os:      "darwin",
-			arch:    arch64bit,
-			version: "3.12.0",
-			url:     `https://github.com/FairwindsOps/pluto/releases/download/3.12.0/pluto_3.12.0_darwin_amd64.tar.gz`,
-		},
-		{
-			os:      "linux",
-			arch:    arch64bit,
-			version: "3.12.0",
-			url:     `https://github.com/FairwindsOps/pluto/releases/download/3.12.0/pluto_3.12.0_linux_amd64.tar.gz`,
-		},
-		{
-			os:      "linux",
-			arch:    archARM64,
-			version: "3.12.0",
-			url:     `https://github.com/FairwindsOps/pluto/releases/download/3.12.0/pluto_3.12.0_linux_arm64.tar.gz`,
-		},
-		{
-			os:      "darwin",
-			arch:    archDarwinARM64,
-			version: "3.12.0",
-			url:     `https://github.com/FairwindsOps/pluto/releases/download/3.12.0/pluto_3.12.0_darwin_arm64.tar.gz`,
-		},
-		{
-			os:      "linux",
-			arch:    archARM7,
-			version: "3.12.0",
-			url:     `https://github.com/FairwindsOps/pluto/releases/download/3.12.0/pluto_3.12.0_linux_armv7.tar.gz`,
 		},
 	}
 
@@ -5293,20 +4643,14 @@ func Test_DownloadKumactl(t *testing.T) {
 		{
 			os:      "darwin",
 			arch:    arch64bit,
-			version: "v2.14.2",
-			url:     "https://packages.konghq.com/public/kuma-binaries-release/raw/names/kuma-darwin-amd64/versions/2.14.2/kuma-2.14.2-darwin-amd64.tar.gz",
+			version: "1.4.1",
+			url:     "https://download.konghq.com/mesh-alpine/kuma-1.4.1-darwin-amd64.tar.gz",
 		},
 		{
 			os:      "linux",
 			arch:    arch64bit,
-			version: "v2.14.2",
-			url:     "https://packages.konghq.com/public/kuma-binaries-release/raw/names/kuma-linux-amd64/versions/2.14.2/kuma-2.14.2-linux-amd64.tar.gz",
-		},
-		{
-			os:      "linux",
-			arch:    archARM64,
-			version: "v2.14.2",
-			url:     "https://packages.konghq.com/public/kuma-binaries-release/raw/names/kuma-linux-arm64/versions/2.14.2/kuma-2.14.2-linux-arm64.tar.gz",
+			version: "1.4.1",
+			url:     "https://download.konghq.com/mesh-alpine/kuma-1.4.1-ubuntu-amd64.tar.gz",
 		},
 	}
 
@@ -6999,31 +6343,31 @@ func Test_GrafanaAgent(t *testing.T) {
 			os:      "linux",
 			arch:    arch64bit,
 			version: version,
-			url:     "https://github.com/grafana-cold-storage/agent/releases/download/v0.31.0/grafana-agent-linux-amd64.zip",
+			url:     "https://github.com/grafana/agent/releases/download/v0.31.0/grafana-agent-linux-amd64.zip",
 		},
 		{
 			os:      "linux",
 			arch:    archARM64,
 			version: version,
-			url:     "https://github.com/grafana-cold-storage/agent/releases/download/v0.31.0/grafana-agent-linux-arm64.zip",
+			url:     "https://github.com/grafana/agent/releases/download/v0.31.0/grafana-agent-linux-arm64.zip",
 		},
 		{
 			os:      "darwin",
 			arch:    arch64bit,
 			version: version,
-			url:     "https://github.com/grafana-cold-storage/agent/releases/download/v0.31.0/grafana-agent-darwin-amd64.zip",
+			url:     "https://github.com/grafana/agent/releases/download/v0.31.0/grafana-agent-darwin-amd64.zip",
 		},
 		{
 			os:      "darwin",
 			arch:    archDarwinARM64,
 			version: version,
-			url:     "https://github.com/grafana-cold-storage/agent/releases/download/v0.31.0/grafana-agent-darwin-arm64.zip",
+			url:     "https://github.com/grafana/agent/releases/download/v0.31.0/grafana-agent-darwin-arm64.zip",
 		},
 		{
 			os:      "ming",
 			arch:    arch64bit,
 			version: version,
-			url:     "https://github.com/grafana-cold-storage/agent/releases/download/v0.31.0/grafana-agent-windows-amd64.exe.zip",
+			url:     "https://github.com/grafana/agent/releases/download/v0.31.0/grafana-agent-windows-amd64.exe.zip",
 		},
 	}
 
@@ -7942,31 +7286,31 @@ func Test_DownloadKubeBurner(t *testing.T) {
 			os:      "linux",
 			arch:    arch64bit,
 			version: toolVersion,
-			url:     `https://github.com/kube-burner/kube-burner/releases/download/v1.8.1/kube-burner-V1.8.1-linux-x86_64.tar.gz`,
+			url:     `https://github.com/cloud-bulldozer/kube-burner/releases/download/v1.8.1/kube-burner-V1.8.1-linux-x86_64.tar.gz`,
 		},
 		{
 			os:      "darwin",
 			arch:    arch64bit,
 			version: toolVersion,
-			url:     `https://github.com/kube-burner/kube-burner/releases/download/v1.8.1/kube-burner-V1.8.1-darwin-x86_64.tar.gz`,
+			url:     `https://github.com/cloud-bulldozer/kube-burner/releases/download/v1.8.1/kube-burner-V1.8.1-darwin-x86_64.tar.gz`,
 		},
 		{
 			os:      "linux",
 			arch:    archARM64,
 			version: toolVersion,
-			url:     `https://github.com/kube-burner/kube-burner/releases/download/v1.8.1/kube-burner-V1.8.1-linux-arm64.tar.gz`,
+			url:     `https://github.com/cloud-bulldozer/kube-burner/releases/download/v1.8.1/kube-burner-V1.8.1-linux-arm64.tar.gz`,
 		},
 		{
 			os:      "darwin",
 			arch:    archDarwinARM64,
 			version: toolVersion,
-			url:     `https://github.com/kube-burner/kube-burner/releases/download/v1.8.1/kube-burner-V1.8.1-darwin-arm64.tar.gz`,
+			url:     `https://github.com/cloud-bulldozer/kube-burner/releases/download/v1.8.1/kube-burner-V1.8.1-darwin-arm64.tar.gz`,
 		},
 		{
 			os:      "ming",
 			arch:    arch64bit,
 			version: toolVersion,
-			url:     `https://github.com/kube-burner/kube-burner/releases/download/v1.8.1/kube-burner-V1.8.1-windows-x86_64.zip`,
+			url:     `https://github.com/cloud-bulldozer/kube-burner/releases/download/v1.8.1/kube-burner-V1.8.1-windows-x86_64.zip`,
 		},
 	}
 
@@ -8749,6 +8093,45 @@ func Test_DownloadRegCtl(t *testing.T) {
 	}
 }
 
+func Test_DownloadFaasd(t *testing.T) {
+	tools := MakeTools()
+	name := "faasd"
+	const version = "0.18.8"
+
+	tool := getTool(name, tools)
+
+	tests := []test{
+		{
+			os:      "linux",
+			arch:    arch64bit,
+			version: version,
+			url:     `https://github.com/openfaas/faasd/releases/download/0.18.8/faasd`,
+		},
+		{
+			os:      "linux",
+			arch:    archARM64,
+			version: version,
+			url:     `https://github.com/openfaas/faasd/releases/download/0.18.8/faasd-arm64`,
+		},
+		{
+			os:      "linux",
+			arch:    archARM7,
+			version: version,
+			url:     `https://github.com/openfaas/faasd/releases/download/0.18.8/faasd-armhf`,
+		},
+	}
+
+	for _, tc := range tests {
+		got, _, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got != tc.url {
+			t.Errorf("want: %s, got: %s", tc.url, got)
+		}
+	}
+}
+
 func Test_DownloadKubeScore(t *testing.T) {
 	tools := MakeTools()
 	name := "kube-score"
@@ -9296,7 +8679,7 @@ func Test_Crossplane(t *testing.T) {
 func Test_Download_rosa(t *testing.T) {
 	tools := MakeTools()
 	name := "rosa"
-	const toolVersion = "v1.2.65"
+	const toolVersion = "v1.2.46"
 
 	tool := getTool(name, tools)
 
@@ -9305,37 +8688,37 @@ func Test_Download_rosa(t *testing.T) {
 			os:      "darwin",
 			arch:    arch64bit,
 			version: toolVersion,
-			url:     "https://github.com/openshift/rosa/releases/download/v1.2.65/rosa_darwin_amd64.zip",
+			url:     "https://github.com/openshift/rosa/releases/download/v1.2.46/rosa_Darwin_x86_64.tar.gz",
 		},
 		{
 			os:      "darwin",
 			arch:    archDarwinARM64,
 			version: toolVersion,
-			url:     "https://github.com/openshift/rosa/releases/download/v1.2.65/rosa_darwin_arm64.zip",
+			url:     "https://github.com/openshift/rosa/releases/download/v1.2.46/rosa_Darwin_arm64.tar.gz",
 		},
 		{
 			os:      "linux",
 			arch:    arch64bit,
 			version: toolVersion,
-			url:     "https://github.com/openshift/rosa/releases/download/v1.2.65/rosa_linux_amd64.zip",
+			url:     "https://github.com/openshift/rosa/releases/download/v1.2.46/rosa_Linux_x86_64.tar.gz",
 		},
 		{
 			os:      "linux",
 			arch:    archARM64,
 			version: toolVersion,
-			url:     "https://github.com/openshift/rosa/releases/download/v1.2.65/rosa_linux_arm64.zip",
+			url:     "https://github.com/openshift/rosa/releases/download/v1.2.46/rosa_Linux_arm64.tar.gz",
 		},
 		{
 			os:      "mingw64_nt-10.0-18362",
 			arch:    arch64bit,
 			version: toolVersion,
-			url:     "https://github.com/openshift/rosa/releases/download/v1.2.65/rosa_windows_amd64.zip",
+			url:     "https://github.com/openshift/rosa/releases/download/v1.2.46/rosa_Windows_x86_64.zip",
 		},
 		{
 			os:      "mingw64_nt-10.0-18362",
 			arch:    archARM64,
 			version: toolVersion,
-			url:     "https://github.com/openshift/rosa/releases/download/v1.2.65/rosa_windows_arm64.zip",
+			url:     "https://github.com/openshift/rosa/releases/download/v1.2.46/rosa_Windows_arm64.zip",
 		},
 	}
 	for _, tc := range tests {
@@ -10269,31 +9652,31 @@ func Test_DownloadAmp(t *testing.T) {
 			os:      "darwin",
 			arch:    arch64bit,
 			version: toolVersion,
-			url:     "https://static.ampcode.com/cli/0.0.1769091939-g843744/amp-darwin-x64",
+			url:     "https://storage.googleapis.com/amp-public-assets-prod-0/cli/0.0.1769091939-g843744/amp-darwin-x64",
 		},
 		{
 			os:      "darwin",
 			arch:    archDarwinARM64,
 			version: toolVersion,
-			url:     "https://static.ampcode.com/cli/0.0.1769091939-g843744/amp-darwin-arm64",
+			url:     "https://storage.googleapis.com/amp-public-assets-prod-0/cli/0.0.1769091939-g843744/amp-darwin-arm64",
 		},
 		{
 			os:      "linux",
 			arch:    arch64bit,
 			version: toolVersion,
-			url:     "https://static.ampcode.com/cli/0.0.1769091939-g843744/amp-linux-x64",
+			url:     "https://storage.googleapis.com/amp-public-assets-prod-0/cli/0.0.1769091939-g843744/amp-linux-x64",
 		},
 		{
 			os:      "linux",
 			arch:    archARM64,
 			version: toolVersion,
-			url:     "https://static.ampcode.com/cli/0.0.1769091939-g843744/amp-linux-arm64",
+			url:     "https://storage.googleapis.com/amp-public-assets-prod-0/cli/0.0.1769091939-g843744/amp-linux-arm64",
 		},
 		{
 			os:      "mingw64_nt-10.0-18362",
 			arch:    arch64bit,
 			version: toolVersion,
-			url:     "https://static.ampcode.com/cli/0.0.1769091939-g843744/amp-windows-x64.exe",
+			url:     "https://storage.googleapis.com/amp-public-assets-prod-0/cli/0.0.1769091939-g843744/amp-windows-x64.exe",
 		},
 	}
 
@@ -10668,334 +10051,5 @@ func Test_DownloadJg(t *testing.T) {
 		if got != tc.url {
 			t.Errorf("want: %s, got: %s", tc.url, got)
 		}
-	}
-}
-
-func Test_DownloadMediaMTX(t *testing.T) {
-	tools := MakeTools()
-	name := "mediamtx"
-	const version = "v1.18.1"
-
-	tool := getTool(name, tools)
-
-	tests := []test{
-		{
-			os:      "linux",
-			arch:    arch64bit,
-			version: version,
-			url:     `https://github.com/bluenviron/mediamtx/releases/download/v1.18.1/mediamtx_v1.18.1_linux_amd64.tar.gz`,
-		},
-		{
-			os:      "linux",
-			arch:    archARM64,
-			version: version,
-			url:     `https://github.com/bluenviron/mediamtx/releases/download/v1.18.1/mediamtx_v1.18.1_linux_arm64.tar.gz`,
-		},
-		{
-			os:      "darwin",
-			arch:    arch64bit,
-			version: version,
-			url:     `https://github.com/bluenviron/mediamtx/releases/download/v1.18.1/mediamtx_v1.18.1_darwin_amd64.tar.gz`,
-		},
-		{
-			os:      "darwin",
-			arch:    archDarwinARM64,
-			version: version,
-			url:     `https://github.com/bluenviron/mediamtx/releases/download/v1.18.1/mediamtx_v1.18.1_darwin_arm64.tar.gz`,
-		},
-		{
-			os:      "ming",
-			arch:    arch64bit,
-			version: version,
-			url:     `https://github.com/bluenviron/mediamtx/releases/download/v1.18.1/mediamtx_v1.18.1_windows_amd64.zip`,
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(fmt.Sprintf("Download for: %s %s %s", tc.os, tc.arch, tc.version), func(r *testing.T) {
-			got, _, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if got != tc.url {
-				r.Errorf("\nwant: %s\ngot:  %s", tc.url, got)
-			}
-		})
-	}
-}
-
-func Test_DownloadXq(t *testing.T) {
-	tools := MakeTools()
-	name := "xq"
-
-	tool := getTool(name, tools)
-
-	const toolVersion = "v1.4.0"
-
-	tests := []test{
-		{
-			os:      "linux",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/sibprogrammer/xq/releases/download/v1.4.0/xq_1.4.0_linux_amd64.tar.gz",
-		},
-		{
-			os:      "linux",
-			arch:    archARM64,
-			version: toolVersion,
-			url:     "https://github.com/sibprogrammer/xq/releases/download/v1.4.0/xq_1.4.0_linux_arm64.tar.gz",
-		},
-		{
-			os:      "darwin",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/sibprogrammer/xq/releases/download/v1.4.0/xq_1.4.0_darwin_amd64.tar.gz",
-		},
-		{
-			os:      "darwin",
-			arch:    archDarwinARM64,
-			version: toolVersion,
-			url:     "https://github.com/sibprogrammer/xq/releases/download/v1.4.0/xq_1.4.0_darwin_arm64.tar.gz",
-		},
-		{
-			os:      "mingw64_nt-10.0-18362",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/sibprogrammer/xq/releases/download/v1.4.0/xq_1.4.0_windows_amd64.zip",
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(fmt.Sprintf("Download for: %s %s %s", tc.os, tc.arch, tc.version), func(r *testing.T) {
-			got, _, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if got != tc.url {
-				t.Errorf("\nwant: %s\ngot:  %s", tc.url, got)
-			}
-		})
-	}
-}
-
-func Test_DownloadHunk(t *testing.T) {
-	tools := MakeTools()
-	name := "hunk"
-
-	tool := getTool(name, tools)
-
-	const toolVersion = "v0.17.0"
-
-	tests := []test{
-		{
-			os:      "linux",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/modem-dev/hunk/releases/download/v0.17.0/hunkdiff-linux-x64.tar.gz",
-		},
-		{
-			os:      "linux",
-			arch:    archARM64,
-			version: toolVersion,
-			url:     "https://github.com/modem-dev/hunk/releases/download/v0.17.0/hunkdiff-linux-arm64.tar.gz",
-		},
-		{
-			os:      "darwin",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/modem-dev/hunk/releases/download/v0.17.0/hunkdiff-darwin-x64.tar.gz",
-		},
-		{
-			os:      "darwin",
-			arch:    archDarwinARM64,
-			version: toolVersion,
-			url:     "https://github.com/modem-dev/hunk/releases/download/v0.17.0/hunkdiff-darwin-arm64.tar.gz",
-		},
-		{
-			os:      "mingw64_nt-10.0-18362",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/modem-dev/hunk/releases/download/v0.17.0/hunkdiff-windows-x64.tar.gz",
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(fmt.Sprintf("Download for: %s %s %s", tc.os, tc.arch, tc.version), func(r *testing.T) {
-			got, _, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if got != tc.url {
-				t.Errorf("\nwant: %s\ngot:  %s", tc.url, got)
-			}
-		})
-	}
-}
-
-func Test_DownloadOha(t *testing.T) {
-	tools := MakeTools()
-	name := "oha"
-
-	tool := getTool(name, tools)
-
-	const toolVersion = "v1.15.0"
-
-	tests := []test{
-		{
-			os:      "linux",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/hatoo/oha/releases/download/v1.15.0/oha-linux-amd64",
-		},
-		{
-			os:      "linux",
-			arch:    archARM64,
-			version: toolVersion,
-			url:     "https://github.com/hatoo/oha/releases/download/v1.15.0/oha-linux-arm64",
-		},
-		{
-			os:      "darwin",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/hatoo/oha/releases/download/v1.15.0/oha-macos-amd64",
-		},
-		{
-			os:      "darwin",
-			arch:    archDarwinARM64,
-			version: toolVersion,
-			url:     "https://github.com/hatoo/oha/releases/download/v1.15.0/oha-macos-arm64",
-		},
-		{
-			os:      "mingw64_nt-10.0-18362",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/hatoo/oha/releases/download/v1.15.0/oha-windows-amd64.exe",
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(fmt.Sprintf("Download for: %s %s %s", tc.os, tc.arch, tc.version), func(r *testing.T) {
-			got, _, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if got != tc.url {
-				t.Errorf("\nwant: %s\ngot:  %s", tc.url, got)
-			}
-		})
-	}
-}
-
-func Test_DownloadFq(t *testing.T) {
-	tools := MakeTools()
-	name := "fq"
-
-	tool := getTool(name, tools)
-
-	const toolVersion = "v0.17.0"
-
-	tests := []test{
-		{
-			os:      "linux",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/wader/fq/releases/download/v0.17.0/fq_0.17.0_linux_amd64.tar.gz",
-		},
-		{
-			os:      "linux",
-			arch:    archARM64,
-			version: toolVersion,
-			url:     "https://github.com/wader/fq/releases/download/v0.17.0/fq_0.17.0_linux_arm64.tar.gz",
-		},
-		{
-			os:      "darwin",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/wader/fq/releases/download/v0.17.0/fq_0.17.0_macos_amd64.zip",
-		},
-		{
-			os:      "darwin",
-			arch:    archDarwinARM64,
-			version: toolVersion,
-			url:     "https://github.com/wader/fq/releases/download/v0.17.0/fq_0.17.0_macos_arm64.zip",
-		},
-		{
-			os:      "mingw64_nt-10.0-18362",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/wader/fq/releases/download/v0.17.0/fq_0.17.0_windows_amd64.zip",
-		},
-		{
-			os:      "mingw64_nt-10.0-18362",
-			arch:    archARM64,
-			version: toolVersion,
-			url:     "https://github.com/wader/fq/releases/download/v0.17.0/fq_0.17.0_windows_arm64.zip",
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(fmt.Sprintf("Download for: %s %s %s", tc.os, tc.arch, tc.version), func(r *testing.T) {
-			got, _, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if got != tc.url {
-				t.Errorf("\nwant: %s\ngot:  %s", tc.url, got)
-			}
-		})
-	}
-}
-
-func Test_DownloadSofka(t *testing.T) {
-	tools := MakeTools()
-	name := "sofka"
-
-	tool := getTool(name, tools)
-
-	const toolVersion = "v0.21.0"
-
-	tests := []test{
-		{
-			os:      "darwin",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/nklmilojevic/sofka/releases/download/v0.21.0/sofka-v0.21.0-x86_64-apple-darwin.tar.gz",
-		},
-		{
-			os:      "darwin",
-			arch:    archDarwinARM64,
-			version: toolVersion,
-			url:     "https://github.com/nklmilojevic/sofka/releases/download/v0.21.0/sofka-v0.21.0-aarch64-apple-darwin.tar.gz",
-		},
-		{
-			os:      "linux",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/nklmilojevic/sofka/releases/download/v0.21.0/sofka-v0.21.0-x86_64-unknown-linux-gnu.tar.gz",
-		},
-		{
-			os:      "linux",
-			arch:    archARM64,
-			version: toolVersion,
-			url:     "https://github.com/nklmilojevic/sofka/releases/download/v0.21.0/sofka-v0.21.0-aarch64-unknown-linux-gnu.tar.gz",
-		},
-		{
-			os:      "mingw64_nt-10.0-18362",
-			arch:    arch64bit,
-			version: toolVersion,
-			url:     "https://github.com/nklmilojevic/sofka/releases/download/v0.21.0/sofka-v0.21.0-x86_64-pc-windows-msvc.tar.gz",
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(fmt.Sprintf("Download for: %s %s %s", tc.os, tc.arch, tc.version), func(r *testing.T) {
-			got, _, err := tool.GetURL(tc.os, tc.arch, tc.version, false)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if got != tc.url {
-				t.Errorf("\nwant: %s\ngot:  %s", tc.url, got)
-			}
-		})
 	}
 }

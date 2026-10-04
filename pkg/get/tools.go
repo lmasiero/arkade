@@ -68,167 +68,17 @@ func MakeTools() Tools {
 {{- else -}}
 {{.Name}}-linux-x64.tar.gz
 {{- end -}}`,
-		},
-		Tool{
-			Owner:          "nektos",
-			Repo:           "act",
-			Name:           "act",
-			Description:    "Run GitHub Actions locally",
-			BinaryTemplate: `{{.Name}}`,
-			URLTemplate: `
-{{$fileName := ""}}
-{{- if eq .OS "darwin" -}}
-{{- if eq .Arch "x86_64" -}}
-{{$fileName = "act_Darwin_x86_64.tar.gz"}}
-{{- else if or (eq .Arch "arm64") (eq .Arch "aarch64") -}}
-{{$fileName = "act_Darwin_arm64.tar.gz"}}
-{{- else -}}
-{{$fileName = "act-unsupported.tar.gz"}}
-{{- end -}}
-{{- else if eq .OS "linux" -}}
-{{- if eq .Arch "x86_64" -}}
-{{$fileName = "act_Linux_x86_64.tar.gz"}}
-{{- else if or (eq .Arch "arm64") (eq .Arch "aarch64") -}}
-{{$fileName = "act_Linux_arm64.tar.gz"}}
-{{- else if eq .Arch "armv7l" -}}
-{{$fileName = "act_Linux_armv7.tar.gz"}}
-{{- else -}}
-{{$fileName = "act-unsupported.tar.gz"}}
-{{- end -}}
-{{- else if HasPrefix .OS "ming" -}}
-{{- if eq .Arch "x86_64" -}}
-{{$fileName = "act_Windows_x86_64.zip"}}
-{{- else -}}
-{{$fileName = "act-unsupported.zip"}}
-{{- end -}}
-{{- else -}}
-{{$fileName = "act-unsupported.tar.gz"}}
-{{- end -}}
-
-https://github.com/{{.Owner}}/{{.Repo}}/releases/download/{{.Version}}/{{$fileName}}
-`,
-		},
-		Tool{
-			Owner:          "ko-build",
-			Repo:           "ko",
-			Name:           "ko",
-			Description:    "Build and deploy container images using Go",
-			BinaryTemplate: `{{.Name}}`,
-			URLTemplate: `
-{{$fileName := ""}}
-{{- if eq .OS "darwin" -}}
-{{- if eq .Arch "x86_64" -}}
-{{$fileName = printf "ko_%s_Darwin_x86_64.tar.gz" .VersionNumber}}
-{{- else if or (eq .Arch "arm64") (eq .Arch "aarch64") -}}
-{{$fileName = printf "ko_%s_Darwin_arm64.tar.gz" .VersionNumber}}
-{{- else -}}
-{{$fileName = "ko-unsupported.tar.gz"}}
-{{- end -}}
-{{- else if eq .OS "linux" -}}
-{{- if eq .Arch "x86_64" -}}
-{{$fileName = printf "ko_%s_Linux_x86_64.tar.gz" .VersionNumber}}
-{{- else if or (eq .Arch "arm64") (eq .Arch "aarch64") -}}
-{{$fileName = printf "ko_%s_Linux_arm64.tar.gz" .VersionNumber}}
-{{- else -}}
-{{$fileName = "ko-unsupported.tar.gz"}}
-{{- end -}}
-{{- else if HasPrefix .OS "ming" -}}
-{{- if eq .Arch "x86_64" -}}
-{{$fileName = printf "ko_%s_Windows_x86_64.tar.gz" .VersionNumber}}
-{{- else -}}
-{{$fileName = "ko-unsupported.tar.gz"}}
-{{- end -}}
-{{- else -}}
-{{$fileName = "ko-unsupported.tar.gz"}}
-{{- end -}}
-
-https://github.com/{{.Owner}}/{{.Repo}}/releases/download/{{.Version}}/{{$fileName}}
-`,
-		},
-		Tool{
-			Owner:          "oras-project",
-			Repo:           "oras",
-			Name:           "oras",
-			Description:    "OCI registry operations from the command line",
-			BinaryTemplate: `{{.Name}}`,
-			URLTemplate: `
-{{$fileName := ""}}
-{{- if eq .OS "darwin" -}}
-{{- if eq .Arch "x86_64" -}}
-{{$fileName = printf "oras_%s_darwin_amd64.tar.gz" .VersionNumber}}
-{{- else if or (eq .Arch "arm64") (eq .Arch "aarch64") -}}
-{{$fileName = printf "oras_%s_darwin_arm64.tar.gz" .VersionNumber}}
-{{- else -}}
-{{$fileName = "oras-unsupported.tar.gz"}}
-{{- end -}}
-{{- else if eq .OS "linux" -}}
-{{- if eq .Arch "x86_64" -}}
-{{$fileName = printf "oras_%s_linux_amd64.tar.gz" .VersionNumber}}
-{{- else if or (eq .Arch "arm64") (eq .Arch "aarch64") -}}
-{{$fileName = printf "oras_%s_linux_arm64.tar.gz" .VersionNumber}}
-{{- else -}}
-{{$fileName = "oras-unsupported.tar.gz"}}
-{{- end -}}
-{{- else if HasPrefix .OS "ming" -}}
-{{- if eq .Arch "x86_64" -}}
-{{$fileName = printf "oras_%s_windows_amd64.zip" .VersionNumber}}
-{{- else -}}
-{{$fileName = "oras-unsupported.zip"}}
-{{- end -}}
-{{- else -}}
-{{$fileName = "oras-unsupported.tar.gz"}}
-{{- end -}}
-
-https://github.com/{{.Owner}}/{{.Repo}}/releases/download/{{.Version}}/{{$fileName}}
-`,
-		},
-		Tool{
-			Owner:          "grafana",
-			Repo:           "k6",
-			Name:           "k6",
-			Description:    "Open-source, extensible performance testing tool",
-			BinaryTemplate: `{{.Name}}`,
-			URLTemplate: `
-{{$fileName := ""}}
-{{- if eq .OS "darwin" -}}
-{{- if eq .Arch "x86_64" -}}
-{{$fileName = printf "k6-v%s-macos-amd64.zip" .VersionNumber}}
-{{- else if or (eq .Arch "arm64") (eq .Arch "aarch64") -}}
-{{$fileName = printf "k6-v%s-macos-arm64.zip" .VersionNumber}}
-{{- else -}}
-{{$fileName = "k6-unsupported.zip"}}
-{{- end -}}
-{{- else if eq .OS "linux" -}}
-{{- if eq .Arch "x86_64" -}}
-{{$fileName = printf "k6-v%s-linux-amd64.tar.gz" .VersionNumber}}
-{{- else if or (eq .Arch "arm64") (eq .Arch "aarch64") -}}
-{{$fileName = printf "k6-v%s-linux-arm64.tar.gz" .VersionNumber}}
-{{- else -}}
-{{$fileName = "k6-unsupported.tar.gz"}}
-{{- end -}}
-{{- else if HasPrefix .OS "ming" -}}
-{{- if eq .Arch "x86_64" -}}
-{{$fileName = printf "k6-v%s-windows-amd64.zip" .VersionNumber}}
-{{- else -}}
-{{$fileName = "k6-unsupported.zip"}}
-{{- end -}}
-{{- else -}}
-{{$fileName = "k6-unsupported.tar.gz"}}
-{{- end -}}
-
-https://github.com/{{.Owner}}/{{.Repo}}/releases/download/{{.Version}}/{{$fileName}}
-`,
 		})
 
 	// Claude Code CLI
 	tools = append(tools,
 		Tool{
-			Owner:          "anthropics",
-			Repo:           "claude-code",
+			Owner:          "anthropic",
+			Repo:           "claude",
 			Name:           "claude",
 			Description:    "Claude Code.",
 			VerifyStrategy: ClaudeShasumStrategy,
-			VerifyTemplate: `https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/{{.VersionNumber}}/manifest.json`, VersionStrategy: GitHubVersionStrategy,
+			VerifyTemplate: `https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/{{.Version}}/manifest.json`, VersionStrategy: ClaudeStrategy,
 			URLTemplate: `
 {{$os := .OS}}
 {{$arch := .Arch}}
@@ -247,7 +97,7 @@ https://github.com/{{.Owner}}/{{.Repo}}/releases/download/{{.Version}}/{{$fileNa
 {{ $os = "linux" }}
 {{- end -}}
 
-https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/{{.VersionNumber}}/{{$os}}-{{$arch}}/claude
+https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/{{.Version}}/{{$os}}-{{$arch}}/claude
 `})
 
 	// Amp CLI
@@ -276,7 +126,7 @@ https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c09
 {{ $os = "linux" }}
 {{- end -}}
 
-https://static.ampcode.com/cli/{{.Version}}/{{$os}}-{{$arch}}-amp.sha256`,
+https://storage.googleapis.com/amp-public-assets-prod-0/cli/{{.Version}}/{{$os}}-{{$arch}}-amp.sha256`,
 			URLTemplate: `
 {{$os := .OS}}
 {{$arch := .Arch}}
@@ -297,7 +147,7 @@ https://static.ampcode.com/cli/{{.Version}}/{{$os}}-{{$arch}}-amp.sha256`,
 {{ $os = "linux" }}
 {{- end -}}
 
-https://static.ampcode.com/cli/{{.Version}}/amp-{{$os}}-{{$arch}}{{$ext}}
+https://storage.googleapis.com/amp-public-assets-prod-0/cli/{{.Version}}/amp-{{$os}}-{{$arch}}{{$ext}}
 `})
 
 	tools = append(tools,
@@ -593,6 +443,7 @@ https://dl.k8s.io/release/{{.Version}}/bin/{{$os}}/{{$arch}}/kubectl{{$ext}}`})
 			Owner:       "loft-sh",
 			Repo:        "devpod",
 			Name:        "devpod",
+			Version:     "v0.7.0-alpha.34",
 			Description: "Codespaces but open-source, client-only and unopinionated: Works with any IDE and lets you use any cloud, kubernetes or just localhost docker.",
 			BinaryTemplate: `{{ if HasPrefix .OS "ming" -}}
 {{.Name}}-windows-amd64.exe
@@ -627,38 +478,6 @@ https://dl.k8s.io/release/{{.Version}}/bin/{{$os}}/{{$arch}}/kubectl{{$ext}}`})
 		})
 
 	tools = append(tools,
-		Tool{
-			Owner:       "rhysd",
-			Repo:        "actionlint",
-			Name:        "actionlint",
-			Description: "Static checker for GitHub Actions workflow files.",
-			BinaryTemplate: `{{$arch := ""}}
-			{{- if eq .Arch "x86_64" -}}
-			{{$arch = "amd64"}}
-			{{- else if or (eq .Arch "aarch64") (eq .Arch "arm64") -}}
-			{{$arch = "arm64"}}
-			{{- end -}}
-
-			{{$osStr := ""}}
-			{{$ext := "tar.gz"}}
-			{{- if eq .OS "linux" -}}
-			{{$osStr = "linux"}}
-			{{- else if eq .OS "darwin" -}}
-			{{$osStr = "darwin"}}
-			{{- else if HasPrefix .OS "ming" -}}
-			{{$osStr = "windows"}}
-			{{$ext = "zip"}}
-			{{- end -}}
-
-			{{$filename := ""}}
-			{{- if and $osStr $arch -}}
-			{{$filename = printf "actionlint_%s_%s_%s.%s" .VersionNumber $osStr $arch $ext}}
-			{{- else -}}
-			{{$filename = "actionlint-unsupported.tar.gz"}}
-			{{- end -}}
-
-			{{$filename}}`,
-		},
 		Tool{
 			Owner:       "sigoden",
 			Repo:        "dufs",
@@ -716,36 +535,6 @@ https://dl.k8s.io/release/{{.Version}}/bin/{{$os}}/{{$arch}}/kubectl{{$ext}}`})
 	{{- else -}}
 	{{.Name}}-linux-amd64
 	{{- end -}}`,
-		})
-
-	tools = append(tools,
-		Tool{
-			Owner:       "k8sgpt-ai",
-			Repo:        "k8sgpt",
-			Name:        "k8sgpt",
-			Description: "Kubernetes AI diagnostic tool and companion for cluster operators.",
-			// Pinned to v0.4.36, transient: v0.4.38 (latest) shipped no binaries,
-			// only an SBOM. Upstream issue k8sgpt-ai/k8sgpt#1775
-			// https://github.com/k8sgpt-ai/k8sgpt/issues/1775
-			// Unpin once binaries are restored.
-			Version:        "v0.4.36",
-			BinaryTemplate: `k8sgpt`,
-			URLTemplate: `
-{{$os := ""}}
-{{$arch := ""}}
-{{$ext := "tar.gz"}}
-{{- if eq .OS "linux" -}}
-	{{$os = "Linux"}}
-	{{- if eq .Arch "x86_64" -}}{{$arch = "x86_64"}}{{- else if (or (eq .Arch "aarch64") (eq .Arch "arm64")) -}}{{$arch = "arm64"}}{{- end -}}
-{{- else if eq .OS "darwin" -}}
-	{{$os = "Darwin"}}
-	{{- if eq .Arch "x86_64" -}}{{$arch = "x86_64"}}{{- else if (or (eq .Arch "aarch64") (eq .Arch "arm64")) -}}{{$arch = "arm64"}}{{- end -}}
-{{- else if HasPrefix .OS "ming" -}}
-	{{$os = "Windows"}}
-	{{$ext = "zip"}}
-	{{- if eq .Arch "x86_64" -}}{{$arch = "x86_64"}}{{- else if (or (eq .Arch "aarch64") (eq .Arch "arm64")) -}}{{$arch = "arm64"}}{{- end -}}
-{{- end -}}
-https://github.com/{{.Owner}}/{{.Repo}}/releases/download/{{.Version}}/k8sgpt_{{$os}}_{{$arch}}.{{$ext}}`,
 		})
 
 	tools = append(tools,
@@ -910,10 +699,10 @@ https://github.com/alexellis/kubetrim/releases/download/{{.Version}}/{{$fileName
 	// tool, and there's no way to filter, so the version has to be hard-coded.
 	tools = append(tools,
 		Tool{
-			Owner:       "bitnami",
+			Owner:       "bitnami-labs",
 			Repo:        "sealed-secrets",
 			Name:        "kubeseal",
-			Version:     "v0.38.4",
+			Version:     "v0.30.0",
 			Description: "A Kubernetes controller and tool for one-way encrypted Secrets",
 			BinaryTemplate: `{{$arch := ""}}
 		{{- if eq .Arch "aarch64" -}}
@@ -1003,19 +792,15 @@ https://github.com/inlets/inletsctl/releases/download/{{.Version}}/{{$fileName}}
 
 	tools = append(tools,
 		Tool{
-			Owner:           "linkerd",
-			Repo:            "linkerd2",
-			Name:            "linkerd2",
-			VersionStrategy: GitHubVersionStrategy,
-			Description:     "Ultralight, security-first service mesh for Kubernetes.",
+			Owner:       "linkerd",
+			Repo:        "linkerd2",
+			Name:        "linkerd2",
+			Version:     "stable-2.9.1",
+			Description: "Ultralight, security-first service mesh for Kubernetes.",
 			BinaryTemplate: `{{ if HasPrefix .OS "ming" -}}
 {{.Name}}-cli-{{.Version}}-windows.exe
 {{- else if eq .OS "darwin" -}}
-{{- if or (eq .Arch "aarch64") (eq .Arch "arm64") -}}
-{{.Name}}-cli-{{.Version}}-darwin-arm64
-{{- else -}}
 {{.Name}}-cli-{{.Version}}-darwin
-{{- end -}}
 {{- else if eq .Arch "x86_64" -}}
 {{.Name}}-cli-{{.Version}}-linux-amd64
 {{- else if eq .Arch "aarch64" -}}
@@ -1026,12 +811,12 @@ https://github.com/inlets/inletsctl/releases/download/{{.Version}}/{{$fileName}}
 
 	tools = append(tools,
 		Tool{
-			Owner:           "kubernetes-sigs",
-			Repo:            "kubebuilder",
-			Name:            "kubebuilder",
-			NoExtension:     true,
-			VersionStrategy: GitHubVersionStrategy,
-			Description:     "Framework for building Kubernetes APIs using custom resource definitions (CRDs).",
+			Owner:       "kubernetes-sigs",
+			Repo:        "kubebuilder",
+			Name:        "kubebuilder",
+			NoExtension: true,
+			Version:     "3.1.0",
+			Description: "Framework for building Kubernetes APIs using custom resource definitions (CRDs).",
 			URLTemplate: `{{$arch := "arm64"}}
 			{{- if eq .Arch "x86_64" -}}
 			{{$arch = "amd64"}}
@@ -1043,7 +828,7 @@ https://github.com/inlets/inletsctl/releases/download/{{.Version}}/{{$fileName}}
 			{{- else if eq .OS "darwin" -}}
 			{{$osStr = "darwin"}}
 			{{- end -}}
-			https://github.com/kubernetes-sigs/kubebuilder/releases/download/v{{.VersionNumber}}/kubebuilder_{{$osStr}}_{{$arch}}`,
+			https://github.com/kubernetes-sigs/kubebuilder/releases/download/v{{.Version}}/kubebuilder_{{$osStr}}_{{$arch}}`,
 		})
 
 	tools = append(tools,
@@ -1052,6 +837,7 @@ https://github.com/inlets/inletsctl/releases/download/{{.Version}}/{{$fileName}}
 			Repo:        "kustomize",
 			Name:        "kustomize",
 			Description: "Customization of kubernetes YAML configurations",
+			Version:     "v5.0.3",
 			BinaryTemplate: `
 	{{$osStr := ""}}
 	{{$ext := "tar.gz"}}
@@ -1062,11 +848,7 @@ https://github.com/inlets/inletsctl/releases/download/{{.Version}}/{{$fileName}}
   {{$osStr = "linux_arm64"}}
 	{{- end -}}
 	{{- else if eq .OS "darwin" -}}
-	{{- if or (eq .Arch "aarch64") (eq .Arch "arm64") -}}
-	{{$osStr = "darwin_arm64"}}
-	{{- else -}}
 	{{$osStr = "darwin_amd64"}}
-	{{- end -}}
 	{{- end -}}
 	{{ if HasPrefix .OS "ming" -}}
 	{{$osStr = "windows_amd64"}}
@@ -1417,11 +1199,11 @@ https://releases.hashicorp.com/{{.Name}}/{{.VersionNumber}}/{{.Name}}_{{.Version
 
 	tools = append(tools,
 		Tool{
-			Owner:           "opentofu",
-			Repo:            "opentofu",
-			Name:            "tofu",
-			VersionStrategy: GitHubVersionStrategy,
-			Description:     "OpenTofu lets you declaratively manage your cloud infrastructure",
+			Owner:       "opentofu",
+			Repo:        "opentofu",
+			Name:        "tofu",
+			Version:     "v1.6.2",
+			Description: "OpenTofu lets you declaratively manage your cloud infrastructure",
 			BinaryTemplate: `
 			{{$extStr := ".zip"}}
 
@@ -1446,11 +1228,11 @@ https://releases.hashicorp.com/{{.Name}}/{{.VersionNumber}}/{{.Name}}_{{.Version
 
 	tools = append(tools,
 		Tool{
-			Owner:           "hashicorp",
-			Repo:            "vagrant",
-			Name:            "vagrant",
-			VersionStrategy: GitHubVersionStrategy,
-			Description:     "Tool for building and distributing development environments.",
+			Owner:       "hashicorp",
+			Repo:        "vagrant",
+			Name:        "vagrant",
+			Version:     "2.2.19",
+			Description: "Tool for building and distributing development environments.",
 			URLTemplate: `{{$arch := .Arch}}
 
 	{{- if eq .Arch "x86_64" -}}
@@ -1464,7 +1246,7 @@ https://releases.hashicorp.com/{{.Name}}/{{.VersionNumber}}/{{.Name}}_{{.Version
 	{{$os = "windows"}}
 	{{- end -}}
 
-	https://releases.hashicorp.com/{{.Name}}/{{.VersionNumber}}/{{.Name}}_{{.VersionNumber}}_{{$os}}_{{$arch}}.zip`})
+	https://releases.hashicorp.com/{{.Name}}/{{.Version}}/{{.Name}}_{{.Version}}_{{$os}}_{{$arch}}.zip`})
 
 	tools = append(tools,
 		Tool{
@@ -1520,7 +1302,7 @@ https://releases.hashicorp.com/{{.Name}}/{{.VersionNumber}}/{{.Name}}_{{.Version
 			Owner:       "cli",
 			Repo:        "cli",
 			Name:        "gh",
-			Description: "GitHub's official command line tool.",
+			Description: "GitHub’s official command line tool.",
 			BinaryTemplate: `
 
 	{{$extStr := "tar.gz"}}
@@ -1945,23 +1727,15 @@ https://releases.hashicorp.com/{{.Name}}/{{.VersionNumber}}/{{.Name}}_{{.Version
 			Repo:        "mc",
 			Name:        "mc",
 			Description: "MinIO Client is a replacement for ls, cp, mkdir, diff and rsync commands for filesystems and object storage.",
-			// MinIO retired the dl.min.io/client/mc/release/ URLs (now 410
-			// Gone) and moved distribution to GitHub releases, with assets
-			// named mc.{os}-{arch}.{RELEASE_TAG}. Permanent: use
-			// BinaryTemplate against the GitHub release, not a URLTemplate.
-			// 32-bit arm (armv6l/armv7l) is no longer built upstream, so it
-			// is intentionally absent and must 404 rather than fall back.
-			BinaryTemplate: `{{$arch := .Arch}}
+			URLTemplate: `{{$arch := .Arch}}
 			{{ if eq .Arch "x86_64" -}}
 			{{$arch = "amd64"}}
-			{{- else if eq .Arch "aarch64" -}}
-			{{$arch = "arm64"}}
-			{{- else if eq .Arch "arm64" -}}
-			{{$arch = "arm64"}}
 			{{- else if eq .Arch "armv6l" -}}
 			{{$arch = "arm"}}
 			{{- else if eq .Arch "armv7l" -}}
 			{{$arch = "arm"}}
+			{{- else if eq .Arch "aarch64" -}}
+			{{$arch = "arm64"}}
 			{{- end -}}
 			{{$osStr := ""}}
 			{{ if HasPrefix .OS "ming" -}}
@@ -1975,7 +1749,7 @@ https://releases.hashicorp.com/{{.Name}}/{{.VersionNumber}}/{{.Name}}_{{.Version
 			{{ if HasPrefix .OS "ming" -}}
 			{{$ext = ".exe"}}
 			{{- end -}}
-			{{.Name}}.{{$osStr}}-{{$arch}}.{{.VersionNumber}}{{$ext}}`,
+			https://dl.min.io/client/{{.Repo}}/release/{{$osStr}}-{{$arch}}/{{.Name}}{{$ext}}`,
 		})
 
 	tools = append(tools,
@@ -2184,33 +1958,34 @@ https://releases.hashicorp.com/{{.Name}}/{{.VersionNumber}}/{{.Name}}_{{.Version
 			{{.Name}}{{$os}}{{$arch}}{{$ext}}`,
 		})
 
-	// kim is no longer maintained (last release Oct 2021), removed from arkade.
-
 	tools = append(tools,
 		Tool{
-			Owner:       "MoonshotAI",
-			Repo:        "kimi-cli",
-			Name:        "kimi",
-			Description: "CLI for the Kimi AI assistant.",
-			URLTemplate: `
-{{$arch := .Arch}}
-{{- if or (eq .Arch "x86_64") (eq .Arch "amd64") -}}
-{{$arch = "x86_64"}}
-{{- else if or (eq .Arch "aarch64") (eq .Arch "arm64") -}}
-{{$arch = "aarch64"}}
-{{- end -}}
-{{$os := .OS}}
-{{$ext := "tar.gz"}}
-{{- if or (HasPrefix .OS "ming") (eq .OS "windows") -}}
-{{$os = "pc-windows-msvc"}}
-{{$ext = "zip"}}
-{{- else if eq .OS "darwin" -}}
-{{$os = "apple-darwin"}}
-{{- else if eq .OS "linux" -}}
-{{$os = "unknown-linux-gnu"}}
-{{- end -}}
-https://github.com/MoonshotAI/kimi-cli/releases/download/{{.Version}}/kimi-{{.Version}}-{{$arch}}-{{$os}}.{{$ext}}`,
-			BinaryTemplate: `kimi`,
+			Owner:       "rancher",
+			Repo:        "kim",
+			Name:        "kim",
+			Version:     "v0.1.0-beta.4",
+			Description: "Build container images inside of Kubernetes. (Experimental)",
+			BinaryTemplate: `
+			{{ $ext := "" }}
+			{{ $osStr := "linux" }}
+			{{ if HasPrefix .OS "ming" -}}
+			{{	$osStr = "windows" }}
+			{{ $ext = ".exe" }}
+			{{- else if eq .OS "darwin" -}}
+			{{  $osStr = "darwin" }}
+			{{- end -}}
+
+			{{ $archStr := "amd64" }}
+
+			{{- if eq .Arch "armv6l" -}}
+			{{ $archStr = "arm" }}
+			{{- else if eq .Arch "armv7l" -}}
+			{{ $archStr = "arm" }}
+			{{- else if eq .Arch "aarch64" -}}
+			{{ $archStr = "arm64" }}
+			{{- end -}}
+
+			{{.Name}}-{{$osStr}}-{{$archStr}}{{$ext}}`,
 		},
 	)
 
@@ -2327,15 +2102,15 @@ https://github.com/MoonshotAI/kimi-cli/releases/download/{{.Version}}/kimi-{{.Ve
 				{{$osString = "linux"}}
 				{{- end -}}
 				{{$ext := ".tar.gz"}}
-				{{.Name}}_{{ .VersionNumber }}_{{$osString}}_{{$arch}}{{$ext}}`,
+				{{.Name}}_{{$osString}}_{{$arch}}{{$ext}}`,
 		})
 	tools = append(tools,
 		Tool{
-			Owner:           "influxdata",
-			Repo:            "influx-cli",
-			Name:            "influx",
-			VersionStrategy: GitHubVersionStrategy,
-			Description:     "InfluxDB's command line interface (influx) is an interactive shell for the HTTP API.",
+			Owner:       "influxdata",
+			Repo:        "influxdb",
+			Name:        "influx",
+			Version:     "2.0.8",
+			Description: "InfluxDB’s command line interface (influx) is an interactive shell for the HTTP API.",
 			URLTemplate: `{{$arch := .Arch}}
 		{{ if eq .Arch "x86_64" -}}
 		{{$arch = "amd64"}}
@@ -2348,7 +2123,7 @@ https://github.com/MoonshotAI/kimi-cli/releases/download/{{.Version}}/kimi-{{.Ve
 		{{$ext = ".zip"}}
 		{{- end -}}
 
-				https://dl.influxdata.com/influxdb/releases/influxdb2-client-{{.VersionNumber}}-{{.OS}}-{{$arch}}{{$ext}}`,
+				https://dl.{{.Owner}}.com/{{.Repo}}/releases/{{.Repo}}2-client-{{.Version}}-{{.OS}}-{{$arch}}{{$ext}}`,
 		})
 
 	tools = append(tools,
@@ -2425,36 +2200,6 @@ https://github.com/{{.Owner}}/{{.Repo}}/releases/download/{{.Version}}/{{.Name}}
 
 	tools = append(tools,
 		Tool{
-			Owner:       "FairwindsOps",
-			Repo:        "pluto",
-			Name:        "pluto",
-			Description: "Find deprecated Kubernetes apiVersions in code repositories and helm releases.",
-			BinaryTemplate: `
-				{{$arch := "amd64"}}
-				{{if eq .Arch "armv7l" -}}
-				{{$arch = "armv7"}}
-				{{- else if eq .Arch "aarch64" -}}
-				{{$arch = "arm64"}}
-				{{- else if eq .Arch "arm64" -}}
-				{{$arch = "arm64"}}
-				{{- end -}}
-
-				{{$osString:= .OS}}
-				{{ if HasPrefix .OS "darwin" -}}
-				{{$osString = "darwin"}}
-				{{- else if eq .OS "linux" -}}
-				{{$osString = "linux"}}
-				{{- end -}}
-				{{$ext := ".tar.gz"}}
-
-				{{.Version}}/{{.Name}}_{{.VersionNumber}}_{{$osString}}_{{$arch}}{{$ext}}
-				`,
-		})
-
-	// johanhaleby/kubetail is a raw script rather than a release binary.
-	// Its download URL needs a tag, so leave this version pinned.
-	tools = append(tools,
-		Tool{
 			Owner:       "johanhaleby",
 			Repo:        "kubetail",
 			Name:        "kubetail",
@@ -2489,6 +2234,7 @@ https://github.com/{{.Owner}}/{{.Repo}}/releases/download/{{.Version}}/{{.Name}}
 			Owner:       "getporter",
 			Repo:        "porter",
 			Name:        "porter",
+			Version:     "v0.38.4",
 			Description: "With Porter you can package your application artifact, tools, etc. as a bundle that can distribute and install.",
 			BinaryTemplate: `
 			{{ $ext := "" }}
@@ -2501,9 +2247,6 @@ https://github.com/{{.Owner}}/{{.Repo}}/releases/download/{{.Version}}/{{.Name}}
 			{{- end -}}
 
 			{{ $archStr := "amd64" }}
-			{{- if or (eq .Arch "aarch64") (eq .Arch "arm64") -}}
-			{{ $archStr = "arm64" }}
-			{{- end -}}
 			{{.Name}}-{{$osStr}}-{{$archStr}}{{$ext}}`,
 		})
 	tools = append(tools,
@@ -2669,6 +2412,7 @@ https://github.com/{{.Owner}}/{{.Repo}}/releases/download/{{.Version}}/{{.Name}}
 			Owner:       "aquasecurity",
 			Repo:        "tfsec",
 			Name:        "tfsec",
+			Version:     "v0.57.1",
 			Description: "Security scanner for your Terraform code",
 			BinaryTemplate: `{{ $ext := "" }}
 				{{ $osStr := "linux" }}
@@ -2680,7 +2424,7 @@ https://github.com/{{.Owner}}/{{.Repo}}/releases/download/{{.Version}}/{{.Name}}
 				{{- end -}}
 
 				{{ $archStr := "amd64" }}
-				{{- if or (eq .Arch "aarch64") (eq .Arch "arm64") -}}
+				{{- if eq .Arch "aarch64" -}}
 				{{ $archStr = "arm64" }}
 				{{- end -}}
 				{{.Name}}-{{$osStr}}-{{$archStr}}{{$ext}}`,
@@ -2994,28 +2738,26 @@ https://github.com/{{.Owner}}/{{.Repo}}/releases/download/{{.Version}}/{{.Name}}
 
 	tools = append(tools,
 		Tool{
-			Owner:           "kumahq",
-			Repo:            "kuma",
-			Name:            "kumactl",
-			VersionStrategy: GitHubVersionStrategy,
-			Description:     "kumactl is a CLI to interact with Kuma and its data",
+			Owner:       "kumahq",
+			Repo:        "kuma",
+			Name:        "kumactl",
+			Version:     "1.4.1",
+			Description: "kumactl is a CLI to interact with Kuma and its data",
 			URLTemplate: `
 			{{$osStr := ""}}
 			{{$archStr := ""}}
 			{{- if HasPrefix .OS "linux" -}}
-			{{$osStr = "linux"}}
+			{{$osStr = "ubuntu"}}
 			{{- else if eq .OS "darwin" -}}
 			{{$osStr = "darwin"}}
 			{{- end -}}
 
 			{{- if eq .Arch "x86_64" -}}
 			{{$archStr = "amd64"}}
-			{{- else if or (eq .Arch "aarch64") (eq .Arch "arm64") -}}
-			{{$archStr = "arm64"}}
 			{{- else -}}
 			{{$archStr = .Arch}}
 			{{- end -}}
-			https://packages.konghq.com/public/kuma-binaries-release/raw/names/{{.Repo}}-{{$osStr}}-{{$archStr}}/versions/{{.VersionNumber}}/{{.Repo}}-{{.VersionNumber}}-{{$osStr}}-{{$archStr}}.tar.gz`,
+			https://download.konghq.com/mesh-alpine/{{.Repo}}-{{.Version}}-{{$osStr}}-{{$archStr}}.tar.gz`,
 			BinaryTemplate: `{{.Name}}`,
 		})
 
@@ -3742,6 +3484,7 @@ https://github.com/{{.Owner}}/{{.Repo}}/releases/download/{{.Version}}/{{.Name}}
 			Owner:       "instrumenta",
 			Repo:        "kubeval",
 			Name:        "kubeval",
+			Version:     "v0.16.1",
 			Description: "Validate your Kubernetes configuration files, supports multiple Kubernetes versions",
 			BinaryTemplate: `
 				{{$os := .OS}}
@@ -3857,11 +3600,9 @@ https://github.com/{{.Owner}}/{{.Repo}}/releases/download/{{.Version}}/{{.Name}}
 			BinaryTemplate: `{{.Name}}-{{.Version}}`,
 		})
 
-	// grafana-agent repo moved from grafana/agent to grafana-cold-storage/agent.
-	// v0.44.3 (latest) has no binaries, only source archives, so pinned at v0.44.2.
 	tools = append(tools,
 		Tool{
-			Owner:       "grafana-cold-storage",
+			Owner:       "grafana",
 			Repo:        "agent",
 			Name:        "grafana-agent",
 			Version:     "v0.44.2",
@@ -3904,6 +3645,7 @@ https://github.com/{{.Owner}}/{{.Repo}}/releases/download/{{.Version}}/{{.Name}}
 
 						{{ if HasPrefix .OS "ming" -}}
 						{{$os = "windows"}}
+						{{$ext = ".exe"}}
 						{{- end -}}
 						grafana-agent-{{$os}}-{{$arch}}{{$ext}}
 						`,
@@ -4336,14 +4078,10 @@ https://github.com/{{.Owner}}/{{.Repo}}/releases/download/{{.Version}}/{{.Name}}
 
 	tools = append(tools,
 		Tool{
-			Owner: "kube-burner",
-			Repo:  "kube-burner",
-			Name:  "kube-burner",
-			// Pinned to v2.8.1, transient: v2.8.2 (latest) ships no binaries.
-			// Upstream issue kube-burner/kube-burner#1296
-			// https://github.com/kube-burner/kube-burner/issues/1296
-			// Unpin once binaries are restored.
-			Version:     "v2.8.1",
+			Owner:       "cloud-bulldozer",
+			Repo:        "kube-burner",
+			Name:        "kube-burner",
+			Version:     "v1.8.1",
 			Description: "A tool aimed at stressing Kubernetes clusters by creating or deleting a high quantity of objects.",
 			BinaryTemplate: `
  					{{$os := .OS}}
@@ -4359,15 +4097,15 @@ https://github.com/{{.Owner}}/{{.Repo}}/releases/download/{{.Version}}/{{.Name}}
 						{{$ext = "zip"}}
  					{{- end -}}
 
-					{{- if eq .Arch "aarch64" -}}
-						{{$arch = "arm64"}}
-					{{- else if eq .Arch "arm64" -}}
-						{{ $arch = "arm64" }}
-					{{- else if eq .Arch "x86_64" -}}
-						{{$arch = "x86_64"}}
-					{{- end -}}
+ 					{{- if eq .Arch "aarch64" -}}
+ 						{{$arch = "arm64"}}
+ 					{{- else if eq .Arch "arm64" -}}
+ 						{{ $arch = "arm64" }}
+ 					{{- else if eq .Arch "x86_64" -}}
+ 						{{ $arch = "x86_64" }}
+ 					{{- end -}}
 
-					{{.Name}}-V{{.VersionNumber}}-{{$os}}-{{$arch}}.{{$ext}}
+ 					{{.Name}}-V{{.VersionNumber}}-{{$os}}-{{$arch}}.{{$ext}}
  					`,
 		})
 
@@ -4435,38 +4173,6 @@ https://github.com/{{.Owner}}/{{.Repo}}/releases/download/{{.Version}}/{{.Name}}
 						{{- end -}}
 
 						https://mirror.openshift.com/pub/openshift-v4/clients/ocp/{{$version}}/openshift-client-{{$os}}{{$arch}}.{{$ext}}
-						`,
-		})
-
-	tools = append(tools,
-		Tool{
-			Owner:          "crc-org",
-			Repo:           "crc",
-			Name:           "crc",
-			Description:    "CRC is a tool to help you run containers. It manages local VMs to run an OpenShift 4.x cluster.",
-			BinaryTemplate: `crc`,
-			URLTemplate: `
-						{{$arch := .Arch}}
-						{{$version := .VersionNumber}}
-						{{$os := .OS}}
-
-						{{- if eq .Arch "aarch64" -}}
-							{{$arch = "arm64"}}
-						{{- else if eq .Arch "arm64" -}}
-							{{$arch = "arm64"}}
-						{{- else if eq .Arch "x86_64" -}}
-							{{$arch = "amd64"}}
-						{{- end -}}
-
-						{{- if eq .VersionNumber "" -}}
-							{{$version = "latest"}}
-						{{- end -}}
-
-						{{- if eq $os "linux" -}}
-							https://mirror.openshift.com/pub/openshift-v4/clients/crc/{{$version}}/crc-linux-{{$arch}}.tar.xz
-						{{- else -}}
-							https://mirror.openshift.com/pub/openshift-v4/clients/crc/{{$version}}/crc-{{$os}}-{{$arch}}.tar.xz
-						{{- end -}}
 						`,
 		})
 
@@ -4811,6 +4517,25 @@ https://github.com/{{.Owner}}/{{.Repo}}/releases/download/{{.Version}}/{{.Name}}
 
 	tools = append(tools,
 		Tool{
+			Owner:       "openfaas",
+			Repo:        "faasd",
+			Name:        "faasd",
+			Description: "faasd - a lightweight & portable faas engine",
+			BinaryTemplate: `
+			        {{$arch := ""}}
+
+					{{- if or (eq .Arch "aarch64") (eq .Arch "arm64") -}}
+					{{$arch = "-arm64"}}
+					{{- else if or (eq .Arch "armv6l") (eq .Arch "armv7l") -}}
+					{{$arch = "-armhf"}}
+					{{- end -}}
+
+					{{.Name}}{{$arch}}
+					`,
+		})
+
+	tools = append(tools,
+		Tool{
 			Owner:       "zegl",
 			Repo:        "kube-score",
 			Name:        "kube-score",
@@ -5020,11 +4745,6 @@ https://github.com/{{.Owner}}/{{.Repo}}/releases/download/{{.Version}}/{{.Name}}
 			Name:            "crossplane",
 			VersionStrategy: GitHubVersionStrategy,
 			Description:     "Simplify some development and administration aspects of Crossplane.",
-			// Pinned to v2.3.0, transient: v2.4.0 (latest) ships no binaries.
-			// https://github.com/crossplane/crossplane/releases/tag/v2.4.0
-			// No upstream issue filed; binaries expected in a follow-up release.
-			// Unpin once binaries are restored.
-			Version: "v2.3.0",
 			URLTemplate: `
 					{{$arch := .Arch}}
 					{{$ext := "" }}
@@ -5052,27 +4772,22 @@ https://github.com/{{.Owner}}/{{.Repo}}/releases/download/{{.Version}}/{{.Name}}
 			Name:            "rosa",
 			VersionStrategy: GitHubVersionStrategy,
 			Description:     "Red Hat OpenShift on AWS (ROSA) command line tool",
-			// v1.2.65 changed asset naming from rosa_Linux_x86_64.tar.gz
-			// to rosa_linux_amd64.zip. Naming change queried upstream in
-			// openshift/rosa#3499.
-			// https://github.com/openshift/rosa/issues/3499
 			BinaryTemplate: `
 							{{$os := .OS}}
 							{{$arch := .Arch}}
-							{{$ext := "zip"}}
+							{{$ext := "tar.gz"}}
 
 							{{- if eq .OS "darwin" -}}
-								{{$os = "darwin"}}
+								{{$os = "Darwin"}}
 							{{- else if eq .OS "linux" -}}
-								{{$os = "linux"}}
+								{{$os = "Linux"}}
 							{{- else if HasPrefix .OS "ming" -}}
-								{{$os = "windows"}}
+								{{$os = "Windows"}}
+								{{$ext = "zip"}}
 							{{- end -}}
 
 							{{- if (or (eq .Arch "aarch64") (eq .Arch "arm64")) -}}
 								{{$arch = "arm64"}}
-							{{- else if eq .Arch "x86_64" -}}
-								{{$arch = "amd64"}}
 							{{- end -}}
 
 						rosa_{{$os}}_{{$arch}}.{{$ext}}
@@ -5162,56 +4877,6 @@ https://github.com/{{.Owner}}/{{.Repo}}/releases/download/{{.Version}}/{{.Name}}
 
 							rclone-{{.Version}}-{{$os}}-{{$arch}}.{{$ext}}
 							`,
-		})
-
-	tools = append(tools,
-		Tool{
-			Owner:           "restic",
-			Repo:            "restic",
-			Name:            "restic",
-			VersionStrategy: GitHubVersionStrategy,
-			Description:     "Restic is a backup program that encrypts data by default and supports multiple backends.",
-			BinaryTemplate: `{{$os := .OS}}
-								{{$arch := .Arch}}
-
-								{{- if (or (eq .Arch "aarch64") (eq .Arch "arm64")) -}}
-									{{$arch = "arm64"}}
-								{{- else if eq .Arch "x86_64" -}}
-									{{$arch = "amd64"}}
-								{{- else if eq .Arch "armv7l" -}}
-									{{$arch = "arm"}}
-								{{- end -}}
-
-								{{- if HasPrefix .OS "ming" -}}
-									{{.Name}}_{{.VersionNumber}}_windows_{{$arch}}
-								{{- else -}}
-									{{.Name}}
-								{{- end -}}
-								`,
-			URLTemplate: `
-								{{$os := .OS}}
-								{{$arch := .Arch}}
-								{{$ext := "bz2"}}
-
-								{{- if eq .OS "darwin" -}}
-									{{$os = "darwin"}}
-								{{- else if eq .OS "linux" -}}
-									{{$os = "linux"}}
-								{{- else if HasPrefix .OS "ming" -}}
-									{{$os = "windows"}}
-									{{$ext = "zip"}}
-								{{- end -}}
-
-								{{- if (or (eq .Arch "aarch64") (eq .Arch "arm64")) -}}
-									{{$arch = "arm64"}}
-								{{- else if eq .Arch "x86_64" -}}
-									{{$arch = "amd64"}}
-								{{- else if eq .Arch "armv7l" -}}
-									{{$arch = "arm"}}
-								{{- end -}}
-
-								https://github.com/restic/restic/releases/download/{{.Version}}/{{.Name}}_{{.VersionNumber}}_{{$os}}_{{$arch}}.{{$ext}}
-								`,
 		})
 
 	tools = append(tools,
@@ -5721,47 +5386,6 @@ codex-{{$arch}}-{{$os}}`,
 https://github.com/openai/codex/releases/download/{{.Version}}/codex-{{$arch}}-{{$os}}{{$ext}}`,
 		})
 
-	// Codex Code Mode Host
-	tools = append(tools,
-		Tool{
-			Owner:       "openai",
-			Repo:        "codex",
-			Name:        "codex-code-mode-host",
-			Description: "Codex code mode host from OpenAI.",
-			BinaryTemplate: `{{$arch := .Arch}}
-{{- if eq .Arch "amd64" -}}
-{{$arch = "x86_64"}}
-{{- else if eq .Arch "arm64" -}}
-{{$arch = "aarch64"}}
-{{- end}}
-{{$os := .OS}}
-{{- if HasPrefix .OS "ming" -}}
-{{$os = "pc-windows-msvc"}}
-{{- else if eq .OS "darwin" -}}
-{{$os = "apple-darwin"}}
-{{- else -}}
-{{$os = "unknown-linux-musl"}}
-{{- end}}
-codex-code-mode-host-{{$arch}}-{{$os}}`,
-			URLTemplate: `{{$arch := .Arch}}
-{{- if eq .Arch "amd64" -}}
-{{$arch = "x86_64"}}
-{{- else if eq .Arch "arm64" -}}
-{{$arch = "aarch64"}}
-{{- end}}
-{{$os := .OS}}
-{{$ext := ".tar.gz"}}
-{{- if HasPrefix .OS "ming" -}}
-{{$os = "pc-windows-msvc.exe"}}
-{{$ext = ".zip"}}
-{{- else if eq .OS "darwin" -}}
-{{$os = "apple-darwin"}}
-{{- else -}}
-{{$os = "unknown-linux-musl"}}
-{{- end}}
-https://github.com/openai/codex/releases/download/{{.Version}}/codex-code-mode-host-{{$arch}}-{{$os}}{{$ext}}`,
-		})
-
 	tools = append(tools,
 		Tool{
 			Owner:          "vi",
@@ -5841,196 +5465,6 @@ https://github.com/vi/websocat/releases/download/{{.Version}}/websocat.{{$target
 	{{$extStr = "zip"}}
 {{- end -}}
 https://github.com/{{.Owner}}/{{.Repo}}/releases/download/{{.Version}}/{{.Name}}_{{.VersionNumber}}_{{$osStr}}_{{$arch}}.{{$extStr}}`,
-		})
-
-	tools = append(tools,
-		Tool{
-			Owner:       "bluenviron",
-			Repo:        "mediamtx",
-			Name:        "mediamtx",
-			Description: "Ready-to-use SRT / WebRTC / RTSP / RTMP / LL-HLS media server and media proxy that allows to read, publish, proxy, record and playback video and audio streams.",
-			URLTemplate: `
-{{$arch := .Arch}}
-{{- if eq .Arch "x86_64" -}}
-	{{$arch = "amd64"}}
-{{- else if eq .Arch "aarch64" -}}
-	{{$arch = "arm64"}}
-{{- end -}}
-{{$osStr := .OS}}
-{{$extStr := "tar.gz"}}
-{{- if HasPrefix .OS "ming" -}}
-	{{$osStr = "windows"}}
-	{{$extStr = "zip"}}
-{{- end -}}
-https://github.com/{{.Owner}}/{{.Repo}}/releases/download/{{.Version}}/{{.Name}}_{{.Version}}_{{$osStr}}_{{$arch}}.{{$extStr}}`,
-		})
-
-	// xq - XML to JSON/YAML converter
-	tools = append(tools,
-		Tool{
-			Owner:       "sibprogrammer",
-			Repo:        "xq",
-			Name:        "xq",
-			Description: "XML to JSON/YAML converter and query tool.",
-			URLTemplate: `
-{{$arch := .Arch}}
-{{- if or (eq .Arch "x86_64") (eq .Arch "amd64") -}}
-	{{$arch = "amd64"}}
-{{- else if or (eq .Arch "aarch64") (eq .Arch "arm64") -}}
-	{{$arch = "arm64"}}
-{{- end -}}
-{{$osStr := ""}}
-{{$extStr := "tar.gz"}}
-{{- if eq .OS "darwin" -}}
-	{{$osStr = "darwin"}}
-{{- else if eq .OS "linux" -}}
-	{{$osStr = "linux"}}
-{{- else if HasPrefix .OS "ming" -}}
-	{{$osStr = "windows"}}
-	{{$extStr = "zip"}}
-{{- end -}}
-https://github.com/{{.Owner}}/{{.Repo}}/releases/download/{{.Version}}/{{.Name}}_{{.VersionNumber}}_{{$osStr}}_{{$arch}}.{{$extStr}}`,
-		})
-
-	// hunk - AI-powered code review CLI
-	tools = append(tools,
-		Tool{
-			Owner:          "modem-dev",
-			Repo:           "hunk",
-			Name:           "hunk",
-			Description:    "AI-powered code review and diff tool.",
-			BinaryTemplate: `hunk`,
-			URLTemplate: `
-{{$fileName := ""}}
-{{- if eq .OS "darwin" -}}
-  {{- if or (eq .Arch "arm64") (eq .Arch "aarch64") -}}
-    {{$fileName = "hunkdiff-darwin-arm64.tar.gz"}}
-  {{- else if eq .Arch "x86_64" -}}
-    {{$fileName = "hunkdiff-darwin-x64.tar.gz"}}
-  {{- else -}}
-    {{$fileName = "hunkdiff-darwin-unsupported.tar.gz"}}
-  {{- end -}}
-{{- else if eq .OS "linux" -}}
-  {{- if or (eq .Arch "arm64") (eq .Arch "aarch64") -}}
-    {{$fileName = "hunkdiff-linux-arm64.tar.gz"}}
-  {{- else if eq .Arch "x86_64" -}}
-    {{$fileName = "hunkdiff-linux-x64.tar.gz"}}
-  {{- else -}}
-    {{$fileName = "hunkdiff-linux-unsupported.tar.gz"}}
-  {{- end -}}
-{{- else if HasPrefix .OS "ming" -}}
-  {{- if eq .Arch "x86_64" -}}
-    {{$fileName = "hunkdiff-windows-x64.tar.gz"}}
-  {{- else -}}
-    {{$fileName = "hunkdiff-windows-unsupported.tar.gz"}}
-  {{- end -}}
-{{- else -}}
-  {{$fileName = "hunkdiff-unsupported.tar.gz"}}
-{{- end -}}
-https://github.com/{{.Owner}}/{{.Repo}}/releases/download/{{.Version}}/{{$fileName}}`,
-		})
-
-	tools = append(tools,
-		Tool{
-			Owner:          "alexellis",
-			Repo:           "vzzn",
-			Name:           "vzzn",
-			Description:    "Vision/OCR client for the toilgate LLM gateway.",
-			BinaryTemplate: `vzzn`,
-			URLTemplate: `
-{{$fileName := "vzzn-unsupported"}}
-{{- if eq .OS "darwin" -}}
-	{{- if or (eq .Arch "x86_64") (eq .Arch "amd64") -}}{{$fileName = "vzzn-darwin"}}{{- else if or (eq .Arch "arm64") (eq .Arch "aarch64") -}}{{$fileName = "vzzn-darwin-arm64"}}{{- end -}}
-{{- else if eq .OS "linux" -}}
-	{{- if or (eq .Arch "x86_64") (eq .Arch "amd64") -}}{{$fileName = "vzzn"}}{{- else if or (eq .Arch "aarch64") (eq .Arch "arm64") -}}{{$fileName = "vzzn-arm64"}}{{- else if eq .Arch "armv7l" -}}{{$fileName = "vzzn-armhf"}}{{- end -}}
-{{- else if HasPrefix .OS "ming" -}}
-	{{- if or (eq .Arch "x86_64") (eq .Arch "amd64") -}}{{$fileName = "vzzn.exe"}}{{- end -}}
-{{- end -}}
-https://github.com/{{.Owner}}/{{.Repo}}/releases/download/{{.Version}}/{{$fileName}}`,
-		})
-
-	tools = append(tools,
-		Tool{
-			Owner:       "hatoo",
-			Repo:        "oha",
-			Name:        "oha",
-			Description: "HTTP load generator inspired by rakyll/hey with a tui animation.",
-			BinaryTemplate: `
- 					{{$os := .OS}}
- 					{{$arch := .Arch}}
- 					{{$ext := ""}}
- 					{{- if eq .OS "darwin" -}}
- 						{{$os = "macos"}}
- 					{{- else if HasPrefix .OS "ming" -}}
- 						{{$os = "windows"}}
- 						{{$ext = ".exe"}}
- 					{{- end -}}
-
- 					{{- if eq .Arch "aarch64" -}}
- 						{{$arch = "arm64"}}
- 					{{- else if eq .Arch "x86_64" -}}
- 						{{$arch = "amd64"}}
- 					{{- end -}}
-
- 					{{.Name}}-{{$os}}-{{$arch}}{{$ext}}
- 					`,
-		})
-
-	tools = append(tools,
-		Tool{
-			Owner:       "wader",
-			Repo:        "fq",
-			Name:        "fq",
-			Description: "jq for binary formats - a tool, language and decoders for working with binary data.",
-			URLTemplate: `
- 					{{$os := .OS}}
- 					{{$arch := .Arch}}
- 					{{$ext := "tar.gz"}}
- 					{{- if eq .OS "darwin" -}}
- 						{{$os = "macos"}}
- 						{{$ext = "zip"}}
- 					{{- else if HasPrefix .OS "ming" -}}
- 						{{$os = "windows"}}
- 						{{$ext = "zip"}}
- 					{{- end -}}
-
- 					{{- if eq .Arch "aarch64" -}}
- 						{{$arch = "arm64"}}
- 					{{- else if eq .Arch "x86_64" -}}
- 						{{$arch = "amd64"}}
- 					{{- end -}}
-
- 					https://github.com/{{.Owner}}/{{.Repo}}/releases/download/{{.Version}}/fq_{{.VersionNumber}}_{{$os}}_{{$arch}}.{{$ext}}
- 					`,
-			BinaryTemplate: `fq`,
-		})
-
-	tools = append(tools,
-		Tool{
-			Owner:       "nklmilojevic",
-			Repo:        "sofka",
-			Name:        "sofka",
-			Description: "A Kubernetes TUI that tells you why it's broken.",
-			URLTemplate: `
-					{{$os := "unknown-linux-gnu"}}
-					{{$arch := .Arch}}
-					{{- if eq .OS "darwin" -}}
-						{{$os = "apple-darwin"}}
-					{{- else if HasPrefix .OS "ming" -}}
-						{{$os = "pc-windows-msvc"}}
-					{{- end -}}
-
-					{{- if eq .Arch "aarch64" -}}
-						{{$arch = "aarch64"}}
-					{{- else if eq .Arch "arm64" -}}
-						{{$arch = "aarch64"}}
-					{{- else if eq .Arch "x86_64" -}}
-						{{$arch = "x86_64"}}
-					{{- end -}}
-
-					https://github.com/{{.Owner}}/{{.Repo}}/releases/download/{{.Version}}/sofka-{{.Version}}-{{$arch}}-{{$os}}.tar.gz
-					`,
-			BinaryTemplate: `sofka`,
 		})
 
 	return tools
