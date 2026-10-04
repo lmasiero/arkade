@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/Masterminds/semver/v3 v3.3.1
-	github.com/alexellis/go-execute/v2 v2.2.1
+	github.com/lmasiero/go-execute/v2 v2.2.1
 	github.com/docker/go-units v0.5.0
 	github.com/google/go-containerregistry v0.20.7
 	github.com/mattn/go-isatty v0.0.20
@@ -21,11 +21,11 @@ require (
 
 require (
 	github.com/Masterminds/semver v1.5.0
-	github.com/alexellis/gha-bump v0.0.6
+	github.com/lmasiero/gha-bump v0.0.6
 )
 
 require (
-	github.com/alexellis/fstail v0.0.0-20250917111842-2ab578ec2afb
+	github.com/lmasiero/fstail v0.0.0-20250917111842-2ab578ec2afb
 	github.com/clipperhouse/displaywidth v0.3.1 // indirect
 	github.com/clipperhouse/stringish v0.1.1 // indirect
 	github.com/clipperhouse/uax29/v2 v2.3.0 // indirect
@@ -53,4 +53,4 @@ require (
 	gopkg.in/fsnotify.v1 v1.4.7 // indirect
 )
 
-replace github.com/alexellis/fstail => ../fstail
+replace github.com/lmasiero/fstail => ../fstail
