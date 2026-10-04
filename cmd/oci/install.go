@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/alexellis/arkade/pkg/archive"
-	"github.com/alexellis/arkade/pkg/env"
+    "github.com/lmasiero/arkade/pkg/archive"
+    "github.com/lmasiero/arkade/pkg/env"
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/crane"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
