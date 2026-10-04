@@ -3,9 +3,9 @@ IsDirty := $(if $(shell git status --porcelain),-dirty,)
 GitCommit := $(shell git rev-parse HEAD)
 BuildTimestamp := $(shell date +%s)
 LDFLAGS := "-s -w \
-	-X github.com/alexellis/arkade/pkg.Version=$(Version)$(IsDirty) \
-	-X github.com/alexellis/arkade/pkg.GitCommit=$(GitCommit) \
-	-X github.com/alexellis/arkade/pkg.BuildTimestamp=$(BuildTimestamp)"
+	-X github.com/lmasiero/arkade/pkg.Version=$(Version)$(IsDirty) \
+	-X github.com/lmasiero/arkade/pkg.GitCommit=$(GitCommit) \
+	-X github.com/lmasiero/arkade/pkg.BuildTimestamp=$(BuildTimestamp)"
 PLATFORM := $(shell ./hack/platform-tag.sh)
 SOURCE_DIRS = cmd pkg main.go
 export GO111MODULE=on
@@ -27,7 +27,7 @@ test:
 
 .PHONY: e2e
 e2e:
-	CGO_ENABLED=0 go test github.com/alexellis/arkade/pkg/get -cover --tags e2e -v
+	CGO_ENABLED=0 go test github.com/lmasiero/arkade/pkg/get -cover --tags e2e -v
 
 .PHONY: dist-local
 dist-local:

@@ -7,7 +7,7 @@
 
 export VERIFY_CHECKSUM=0
 export ALIAS_NAME="ark"
-export OWNER=alexellis
+export OWNER=lmasiero
 export REPO=arkade
 
 if [ -z "$BINLOCATION" ]; then
@@ -18,10 +18,10 @@ usage() {
     echo "Usage: get.sh [-b|--bin-dir PATH] [PATH]"
     echo ""
     echo "Install arkade into PATH (default: /usr/local/bin)."
-    echo "Examples:"
-    echo "  curl -sLS https://get.arkade.dev | sh"
-    echo "  curl -sLS https://get.arkade.dev | sh -s -- ."
-    echo "  curl -sLS https://get.arkade.dev | sh -s -- --bin-dir \"$HOME/bin\""
+    # echo "Examples:"
+    # echo "  curl -sLS https://get.arkade.dev | sh"
+    # echo "  curl -sLS https://get.arkade.dev | sh -s -- ."
+    # echo "  curl -sLS https://get.arkade.dev | sh -s -- --bin-dir \"$HOME/bin\""
 }
 
 parseArgs() {
