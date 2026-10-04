@@ -2,6 +2,7 @@ package get
 
 import (
 	"bytes"
+	"compress/bzip2"
 	"compress/gzip"
 	"crypto/sha256"
 	"encoding/json"
@@ -19,6 +20,7 @@ import (
 	"time"
 
 	units "github.com/docker/go-units"
+	"github.com/ulikunitz/xz"
 
 	"github.com/alexellis/arkade/pkg"
 	"github.com/alexellis/arkade/pkg/archive"
@@ -819,6 +821,18 @@ func decompress(tool *Tool, downloadURL, outFilePath, operatingSystem, arch, ver
 		if err := ungzip(archiveFile, outFilePath); err != nil {
 			return "", err
 		}
+	} else if strings.HasSuffix(downloadURL, ".bz2") {
+		if err := unbzip(archiveFile, outFilePath); err != nil {
+			return "", err
+		}
+	} else if strings.HasSuffix(downloadURL, "tar.xz") {
+		xzReader, err := xz.NewReader(archiveFile)
+		if err != nil {
+			return "", err
+		}
+		if err := archive.Untar(xzReader, outFilePathDir, false, forceQuiet); err != nil {
+			return "", err
+		}
 	}
 
 	return outFilePath, nil
@@ -837,6 +851,22 @@ func ungzip(archiveFile *os.File, outFilePath string) error {
 	}
 
 	if _, err := io.Copy(out, gzReader); err != nil {
+		out.Close()
+		return err
+	}
+
+	return out.Close()
+}
+
+func unbzip(archiveFile *os.File, outFilePath string) error {
+	bzReader := bzip2.NewReader(archiveFile)
+
+	out, err := os.OpenFile(outFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0775)
+	if err != nil {
+		return err
+	}
+
+	if _, err := io.Copy(out, bzReader); err != nil {
 		out.Close()
 		return err
 	}

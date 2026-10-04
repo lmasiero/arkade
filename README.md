@@ -12,7 +12,7 @@ With `arkade get`, you'll have `kubectl`, `kind`, `terraform`, and `jq` on your 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![Downloads](https://img.shields.io/github/downloads/alexellis/arkade/total)
 
-With 193 CLIs and 53 Kubernetes apps (charts, manifests, installers) available for Kubernetes, gone are the days of contending with dozens of README files just to set up a development stack with the usual suspects like ingress-nginx, Postgres, and cert-manager.
+With 204 CLIs and 53 Kubernetes apps (charts, manifests, installers) available for Kubernetes, gone are the days of contending with dozens of README files just to set up a development stack with the usual suspects like ingress-nginx, Postgres, and cert-manager.
 
 - [arkade - Open Source Marketplace For Developer Tools](#arkade---open-source-marketplace-for-developer-tools)
   - [Support arkade 👋 (From Our Sponsors)](#support-arkade---from-our-sponsors)
@@ -183,6 +183,13 @@ arkade get faas-cli \
 ```
 > This is a time saver compared to searching for download pages every time you need a tool.
 
+Search CLIs available via `arkade get` by name or keyword, with alias support (e.g. "k8s" expands to "Kubernetes"):
+
+```bash
+arkade search helm
+arkade search k8s
+```
+
 Files are stored at `$HOME/.arkade/bin/`
 
 Want to download tools to a custom path such as into the GitHub Actions cached tool folder?
@@ -274,6 +281,25 @@ Options:
 * Path can be specified as a positional argument (e.g., `/usr/local/bin` or `.`)
 * `--version` - the version of the package to extract, if not specified the `:latest` tag is used
 * `--arch` - the architecture to extract, if not specified the host's architecture is used
+
+## Publish to OCI images
+
+`arkade oci publish` is the inverse of `install`: it bundles a directory (or a set of pre-built tarballs) into an OCI image and pushes it to a registry. Tags follow `docker build`/`buildx` syntax, one `-t` per identifier.
+
+```bash
+# Publish ./dist as a single layer to one tag
+arkade oci publish ./dist -t ghcr.io/me/app:0.1.0
+
+# Multiple tags, one -t each
+arkade oci publish ./dist -t ghcr.io/me/app:0.1.0 -t ghcr.io/me/app:latest
+
+# Multi-arch index from pre-built tarballs
+arkade oci publish -t ghcr.io/me/app:0.1.0 \
+  --bundle linux/amd64=./app-amd64.tgz \
+  --bundle linux/arm64=./app-arm64.tgz
+```
+
+Credentials come from your local Docker keychain (what `docker login` writes). On GitHub Actions, the `docker/login-action` step populates that keychain for ghcr.io, and anonymous registries like `ttl.sh` need no login. Writing over an existing tag simply re-points it — old layers are left for the registry's garbage collector.
 
 ## Install CLIs during CI with GitHub Actions
 
@@ -766,8 +792,11 @@ There are 53 apps that you can install on your cluster.
 ### Catalog of CLIs
 
 <!-- start of tool list -->
+
 |                                     TOOL                                     |                                                                            DESCRIPTION                                                                            |
 |------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [act](https://github.com/nektos/act)                                         | Run GitHub Actions locally                                                                                                                                        |
+| [actionlint](https://github.com/rhysd/actionlint)                            | Static checker for GitHub Actions workflow files.                                                                                                                 |
 | [actions-usage](https://github.com/self-actuated/actions-usage)              | Get usage insights from GitHub Actions.                                                                                                                           |
 | [actuated-cli](https://github.com/self-actuated/actuated-cli)                | Official CLI for actuated.dev                                                                                                                                     |
 | [age](https://github.com/FiloSottile/age)                                    | A simple, modern, and secure file encryption tool.                                                                                                                |
@@ -787,12 +816,13 @@ There are 53 apps that you can install on your cluster.
 | [ch-remote](https://github.com/cloud-hypervisor/cloud-hypervisor)            | The ch-remote binary is used for controlling an running Virtual Machine.                                                                                          |
 | [cilium](https://github.com/cilium/cilium-cli)                               | CLI to install, manage & troubleshoot Kubernetes clusters running Cilium.                                                                                         |
 | [civo](https://github.com/civo/cli)                                          | CLI for interacting with your Civo resources.                                                                                                                     |
-| [claude](https://github.com/anthropic/claude)                                | Claude Code.                                                                                                                                                      |
+| [claude](https://github.com/anthropics/claude-code)                          | Claude Code.                                                                                                                                                      |
 | [cloud-hypervisor](https://github.com/cloud-hypervisor/cloud-hypervisor)     | Cloud Hypervisor is an open source Virtual Machine Monitor (VMM) that runs on top of the KVM hypervisor and the Microsoft Hypervisor (MSHV).                      |
 | [clusterawsadm](https://github.com/kubernetes-sigs/cluster-api-provider-aws) | Kubernetes Cluster API Provider AWS Management Utility                                                                                                            |
 | [clusterctl](https://github.com/kubernetes-sigs/cluster-api)                 | The clusterctl CLI tool handles the lifecycle of a Cluster API management cluster                                                                                 |
 | [cmctl](https://github.com/cert-manager/cmctl)                               | cmctl is a CLI tool that helps you manage cert-manager and its resources inside your cluster.                                                                     |
 | [codex](https://github.com/openai/codex)                                     | Codex CLI from OpenAI.                                                                                                                                            |
+| [codex-code-mode-host](https://github.com/openai/codex)                      | Codex code mode host from OpenAI.                                                                                                                                 |
 | [conftest](https://github.com/open-policy-agent/conftest)                    | Write tests against structured configuration data using the Open Policy Agent Rego query language                                                                 |
 | [consul](https://github.com/hashicorp/consul)                                | A solution to connect and configure applications across dynamic, distributed infrastructure                                                                       |
 | [copa](https://github.com/project-copacetic/copacetic)                       | CLI for patching container images                                                                                                                                 |
@@ -800,6 +830,7 @@ There are 53 apps that you can install on your cluster.
 | [cosign](https://github.com/sigstore/cosign)                                 | Container Signing, Verification and Storage in an OCI registry.                                                                                                   |
 | [cr](https://github.com/helm/chart-releaser)                                 | Hosting Helm Charts via GitHub Pages and Releases                                                                                                                 |
 | [crane](https://github.com/google/go-containerregistry)                      | crane is a tool for interacting with remote images and registries                                                                                                 |
+| [crc](https://github.com/crc-org/crc)                                        | CRC is a tool to help you run containers. It manages local VMs to run an OpenShift 4.x cluster.                                                                   |
 | [croc](https://github.com/schollz/croc)                                      | Easily and securely send things from one computer to another                                                                                                      |
 | [crossplane](https://github.com/crossplane/crossplane)                       | Simplify some development and administration aspects of Crossplane.                                                                                               |
 | [crush](https://github.com/charmbracelet/crush)                              | A delightful AI assistant for your terminal                                                                                                                       |
@@ -820,23 +851,23 @@ There are 53 apps that you can install on your cluster.
 | [eksctl-anywhere](https://github.com/aws/eks-anywhere)                       | Run Amazon EKS on your own infrastructure                                                                                                                         |
 | [etcd](https://github.com/etcd-io/etcd)                                      | Distributed reliable key-value store for the most critical data of a distributed system.                                                                          |
 | [faas-cli](https://github.com/openfaas/faas-cli)                             | Official CLI for OpenFaaS.                                                                                                                                        |
-| [faasd](https://github.com/openfaas/faasd)                                   | faasd - a lightweight & portable faas engine                                                                                                                      |
 | [fd](https://github.com/sharkdp/fd)                                          | A simple, fast and user-friendly alternative to find.                                                                                                             |
 | [firectl](https://github.com/firecracker-microvm/firectl)                    | Command-line tool that lets you run arbitrary Firecracker MicroVMs                                                                                                |
 | [flux](https://github.com/fluxcd/flux2)                                      | Continuous Delivery solution for Kubernetes powered by GitOps Toolkit.                                                                                            |
 | [flyctl](https://github.com/superfly/flyctl)                                 | Command line tools for fly.io services                                                                                                                            |
+| [fq](https://github.com/wader/fq)                                            | jq for binary formats - a tool, language and decoders for working with binary data.                                                                               |
 | [fstail](https://github.com/alexellis/fstail)                                | Tail modified files in a directory.                                                                                                                               |
 | [fzf](https://github.com/junegunn/fzf)                                       | General-purpose command-line fuzzy finder                                                                                                                         |
-| [gh](https://github.com/cli/cli)                                             | GitHub’s official command line tool.                                                                                                                              |
+| [gh](https://github.com/cli/cli)                                             | GitHub's official command line tool.                                                                                                                              |
 | [gha-bump](https://github.com/alexellis/gha-bump)                            | GitHub Actions dependency bump tool.                                                                                                                              |
 | [git-who](https://github.com/sinclairtarget/git-who)                         | Git blame for file trees.                                                                                                                                         |
 | [glab](https://github.com/gitlab-org/cli)                                    | A GitLab CLI tool bringing GitLab to your command line.                                                                                                           |
-| [glow](https://github.com/charmbracelet/glow)                                | Render markdown on the CLI, with pizzazz! 💅🏻                                                                                                                      |
+| [glow](https://github.com/charmbracelet/glow)                                | Render markdown on the CLI, with pizzazz! 💅🏻                                                                                                                    |
 | [golangci-lint](https://github.com/golangci/golangci-lint)                   | Go linters aggregator.                                                                                                                                            |
 | [gomplate](https://github.com/hairyhenderson/gomplate)                       | A flexible commandline tool for template rendering. Supports lots of local and remote datasources.                                                                |
 | [goreleaser](https://github.com/goreleaser/goreleaser)                       | Deliver Go binaries as fast and easily as possible                                                                                                                |
 | [gptscript](https://github.com/gptscript-ai/gptscript)                       | Natural Language Programming                                                                                                                                      |
-| [grafana-agent](https://github.com/grafana/agent)                            | Grafana Agent is a telemetry collector for sending metrics, logs, and trace data to the opinionated Grafana observability stack.                                  |
+| [grafana-agent](https://github.com/grafana-cold-storage/agent)               | Grafana Agent is a telemetry collector for sending metrics, logs, and trace data to the opinionated Grafana observability stack.                                  |
 | [grype](https://github.com/anchore/grype)                                    | A vulnerability scanner for container images and filesystems                                                                                                      |
 | [hadolint](https://github.com/hadolint/hadolint)                             | A smarter Dockerfile linter that helps you build best practice Docker images                                                                                      |
 | [helm](https://github.com/helm/helm)                                         | The Kubernetes Package Manager: Think of it like apt/yum/homebrew for Kubernetes.                                                                                 |
@@ -845,7 +876,8 @@ There are 53 apps that you can install on your cluster.
 | [hostctl](https://github.com/guumaster/hostctl)                              | Dev tool to manage /etc/hosts like a pro!                                                                                                                         |
 | [hubble](https://github.com/cilium/hubble)                                   | CLI for network, service & security observability for Kubernetes clusters running Cilium.                                                                         |
 | [hugo](https://github.com/gohugoio/hugo)                                     | Static HTML and CSS website generator.                                                                                                                            |
-| [influx](https://github.com/influxdata/influxdb)                             | InfluxDB’s command line interface (influx) is an interactive shell for the HTTP API.                                                                              |
+| [hunk](https://github.com/modem-dev/hunk)                                    | AI-powered code review and diff tool.                                                                                                                             |
+| [influx](https://github.com/influxdata/influx-cli)                           | InfluxDB's command line interface (influx) is an interactive shell for the HTTP API.                                                                              |
 | [inlets-pro](https://github.com/inlets/inlets-pro)                           | Cloud Native Tunnel for HTTP and TCP traffic.                                                                                                                     |
 | [inletsctl](https://github.com/inlets/inletsctl)                             | Automates the task of creating an exit-server (tunnel server) on public cloud infrastructure.                                                                     |
 | [istioctl](https://github.com/istio/istio)                                   | Service Mesh to establish a programmable, application-aware network using the Envoy service proxy.                                                                |
@@ -857,18 +889,21 @@ There are 53 apps that you can install on your cluster.
 | [k3d](https://github.com/k3d-io/k3d)                                         | Helper to run Rancher Lab's k3s in Docker.                                                                                                                        |
 | [k3s](https://github.com/k3s-io/k3s)                                         | Lightweight Kubernetes                                                                                                                                            |
 | [k3sup](https://github.com/alexellis/k3sup)                                  | Bootstrap Kubernetes with k3s over SSH < 1 min.                                                                                                                   |
+| [k6](https://github.com/grafana/k6)                                          | Open-source, extensible performance testing tool                                                                                                                  |
+| [k8sgpt](https://github.com/k8sgpt-ai/k8sgpt)                                | Kubernetes AI diagnostic tool and companion for cluster operators.                                                                                                |
 | [k9s](https://github.com/derailed/k9s)                                       | Provides a terminal UI to interact with your Kubernetes clusters.                                                                                                 |
 | [kail](https://github.com/boz/kail)                                          | Kubernetes log viewer.                                                                                                                                            |
 | [keploy](https://github.com/keploy/keploy)                                   | Test generation for Developers. Generate tests and stubs for your application that actually work!                                                                 |
 | [kgctl](https://github.com/squat/kilo)                                       | A CLI to manage Kilo, a multi-cloud network overlay built on WireGuard and designed for Kubernetes.                                                               |
-| [kim](https://github.com/rancher/kim)                                        | Build container images inside of Kubernetes. (Experimental)                                                                                                       |
+| [kimi](https://github.com/MoonshotAI/kimi-cli)                               | CLI for the Kimi AI assistant.                                                                                                                                    |
 | [kind](https://github.com/kubernetes-sigs/kind)                              | Run local Kubernetes clusters using Docker container nodes.                                                                                                       |
 | [kluctl](https://github.com/kluctl/kluctl)                                   | Kluctl is a tool to deploy applications declaratively to Kubernetes via a gitops approach.                                                                        |
+| [ko](https://github.com/ko-build/ko)                                         | Build and deploy container images using Go                                                                                                                        |
 | [kops](https://github.com/kubernetes/kops)                                   | Production Grade K8s Installation, Upgrades, and Management.                                                                                                      |
 | [krew](https://github.com/kubernetes-sigs/krew)                              | Package manager for kubectl plugins.                                                                                                                              |
 | [ktop](https://github.com/vladimirvivien/ktop)                               | A top-like tool for your Kubernetes cluster.                                                                                                                      |
 | [kube-bench](https://github.com/aquasecurity/kube-bench)                     | Checks whether Kubernetes is deployed securely by running the checks documented in the CIS Kubernetes Benchmark.                                                  |
-| [kube-burner](https://github.com/cloud-bulldozer/kube-burner)                | A tool aimed at stressing Kubernetes clusters by creating or deleting a high quantity of objects.                                                                 |
+| [kube-burner](https://github.com/kube-burner/kube-burner)                    | A tool aimed at stressing Kubernetes clusters by creating or deleting a high quantity of objects.                                                                 |
 | [kube-linter](https://github.com/stackrox/kube-linter)                       | KubeLinter is a static analysis tool that checks Kubernetes YAML files and Helm charts to ensure the applications represented in them adhere to best practices.   |
 | [kube-score](https://github.com/zegl/kube-score)                             | A tool that performs static code analysis of your Kubernetes object definitions.                                                                                  |
 | [kubebuilder](https://github.com/kubernetes-sigs/kubebuilder)                | Framework for building Kubernetes APIs using custom resource definitions (CRDs).                                                                                  |
@@ -880,7 +915,7 @@ There are 53 apps that you can install on your cluster.
 | [kubelogin](https://github.com/Azure/kubelogin)                              | A Kubernetes credential (exec) plugin implementing azure authentication                                                                                           |
 | [kubens](https://github.com/ahmetb/kubectx)                                  | Switch between Kubernetes namespaces smoothly.                                                                                                                    |
 | [kubescape](https://github.com/kubescape/kubescape)                          | kubescape is the first tool for testing if Kubernetes is deployed securely as defined in Kubernetes Hardening Guidance by NSA and CISA                            |
-| [kubeseal](https://github.com/bitnami-labs/sealed-secrets)                   | A Kubernetes controller and tool for one-way encrypted Secrets                                                                                                    |
+| [kubeseal](https://github.com/bitnami/sealed-secrets)                        | A Kubernetes controller and tool for one-way encrypted Secrets                                                                                                    |
 | [kubetail](https://github.com/johanhaleby/kubetail)                          | Bash script to tail Kubernetes logs from multiple pods at the same time.                                                                                          |
 | [kubetrim](https://github.com/alexellis/kubetrim)                            | Tidy up old Kubernetes clusters from kubeconfig.                                                                                                                  |
 | [kubeval](https://github.com/instrumenta/kubeval)                            | Validate your Kubernetes configuration files, supports multiple Kubernetes versions                                                                               |
@@ -896,6 +931,7 @@ There are 53 apps that you can install on your cluster.
 | [linkerd2](https://github.com/linkerd/linkerd2)                              | Ultralight, security-first service mesh for Kubernetes.                                                                                                           |
 | [logcli](https://github.com/grafana/loki)                                    | LogCLI is the command-line interface to Grafana Loki. It facilitates running LogQL queries against a Loki instance.                                               |
 | [mc](https://github.com/minio/mc)                                            | MinIO Client is a replacement for ls, cp, mkdir, diff and rsync commands for filesystems and object storage.                                                      |
+| [mediamtx](https://github.com/bluenviron/mediamtx)                           | Ready-to-use SRT / WebRTC / RTSP / RTMP / LL-HLS media server and media proxy that allows to read, publish, proxy, record and playback video and audio streams.   |
 | [metal](https://github.com/equinix/metal-cli)                                | Official Equinix Metal CLI                                                                                                                                        |
 | [minikube](https://github.com/kubernetes/minikube)                           | Runs the latest stable release of Kubernetes, with support for standard Kubernetes features.                                                                      |
 | [mixctl](https://github.com/inlets/mixctl)                                   | A tiny TCP load-balancer.                                                                                                                                         |
@@ -908,15 +944,18 @@ There are 53 apps that you can install on your cluster.
 | [nu](https://github.com/nushell/nushell)                                     | A new type of shell that can handle structured data like YAML really well                                                                                         |
 | [oc](https://github.com/openshift/oc)                                        | Client to use an OpenShift 4.x cluster.                                                                                                                           |
 | [oh-my-posh](https://github.com/jandedobbeleer/oh-my-posh)                   | A prompt theme engine for any shell that can display kubernetes information.                                                                                      |
+| [oha](https://github.com/hatoo/oha)                                          | HTTP load generator inspired by rakyll/hey with a tui animation.                                                                                                  |
 | [op](https://github.com/1password/)                                          | 1Password CLI enables you to automate administrative tasks and securely provision secrets across development environments.                                        |
 | [opa](https://github.com/open-policy-agent/opa)                              | General-purpose policy engine that enables unified, context-aware policy enforcement across the entire stack.                                                     |
 | [opencode](https://github.com/anomalyco/opencode)                            | The opencode CLI for running AI agents and tools.                                                                                                                 |
 | [openshift-install](https://github.com/openshift/installer)                  | CLI to install an OpenShift 4.x cluster.                                                                                                                          |
 | [operator-sdk](https://github.com/operator-framework/operator-sdk)           | Operator SDK is a tool for scaffolding and generating code for building Kubernetes operators                                                                      |
 | [opkssh](https://github.com/openpubkey/opkssh)                               | A new type of shell that can handle structured data like YAML really well                                                                                         |
+| [oras](https://github.com/oras-project/oras)                                 | OCI registry operations from the command line                                                                                                                     |
 | [osm](https://github.com/openservicemesh/osm)                                | Open Service Mesh uniformly manages, secures, and gets out-of-the-box observability features.                                                                     |
 | [pack](https://github.com/buildpacks/pack)                                   | Build apps using Cloud Native Buildpacks.                                                                                                                         |
 | [packer](https://github.com/hashicorp/packer)                                | Build identical machine images for multiple platforms from a single source configuration.                                                                         |
+| [pluto](https://github.com/FairwindsOps/pluto)                               | Find deprecated Kubernetes apiVersions in code repositories and helm releases.                                                                                    |
 | [polaris](https://github.com/FairwindsOps/polaris)                           | Run checks to ensure Kubernetes pods and controllers are configured using best practices.                                                                         |
 | [popeye](https://github.com/derailed/popeye)                                 | Scans live Kubernetes cluster and reports potential issues with deployed resources and configurations.                                                            |
 | [porter](https://github.com/getporter/porter)                                | With Porter you can package your application artifact, tools, etc. as a bundle that can distribute and install.                                                   |
@@ -926,6 +965,7 @@ There are 53 apps that you can install on your cluster.
 | [regctl](https://github.com/regclient/regclient)                             | Utility for accessing docker registries                                                                                                                           |
 | [rekor-cli](https://github.com/sigstore/rekor)                               | Secure Supply Chain - Transparency Log                                                                                                                            |
 | [replicated](https://github.com/replicatedhq/replicated)                     | CLI for interacting with the Replicated Vendor API                                                                                                                |
+| [restic](https://github.com/restic/restic)                                   | Restic is a backup program that encrypts data by default and supports multiple backends.                                                                          |
 | [rg](https://github.com/BurntSushi/ripgrep)                                  | ripgrep recursively searches directories for a regex pattern while respecting your gitignore                                                                      |
 | [rosa](https://github.com/openshift/rosa)                                    | Red Hat OpenShift on AWS (ROSA) command line tool                                                                                                                 |
 | [rpk](https://github.com/redpanda-data/redpanda)                             | Kafka compatible streaming platform for mission critical workloads.                                                                                               |
@@ -934,6 +974,7 @@ There are 53 apps that you can install on your cluster.
 | [seaweedfs](https://github.com/seaweedfs/seaweedfs)                          | SeaweedFS is a fast distributed storage system for blobs, objects, files, and data lake, for billions of files!                                                   |
 | [skupper](https://github.com/skupperproject/skupper)                         | Skupper is an implementation of a Virtual Application Network, enabling rich hybrid cloud communication                                                           |
 | [snowmachine](https://github.com/rgee0/snowmachine)                          | Festive cheer for your terminal.                                                                                                                                  |
+| [sofka](https://github.com/nklmilojevic/sofka)                               | A Kubernetes TUI that tells you why it's broken.                                                                                                                  |
 | [sops](https://github.com/getsops/sops)                                      | Simple and flexible tool for managing secrets                                                                                                                     |
 | [ssync](https://github.com/alexellis/ssync)                                  | Sync files from one machine to another.                                                                                                                           |
 | [starship](https://github.com/starship/starship)                             | The minimal, blazing-fast, and infinitely customizable prompt for any shell!                                                                                      |
@@ -959,12 +1000,11 @@ There are 53 apps that you can install on your cluster.
 | [vcluster](https://github.com/loft-sh/vcluster)                              | Create fully functional virtual Kubernetes clusters - Each vcluster runs inside a namespace of the underlying k8s cluster.                                        |
 | [vhs](https://github.com/charmbracelet/vhs)                                  | CLI for recording demos                                                                                                                                           |
 | [viddy](https://github.com/sachaos/viddy)                                    | A modern watch command. Time machine and pager etc.                                                                                                               |
+| [vzzn](https://github.com/alexellis/vzzn)                                    | Vision/OCR client for the toilgate LLM gateway.                                                                                                                   |
 | [waypoint](https://github.com/hashicorp/waypoint)                            | Easy application deployment for Kubernetes and Amazon ECS                                                                                                         |
 | [websocat](https://github.com/vi/websocat)                                   | Command-line client for WebSockets, like netcat/socat but for WebSockets                                                                                          |
+| [xq](https://github.com/sibprogrammer/xq)                                    | XML to JSON/YAML converter and query tool.                                                                                                                        |
 | [yq](https://github.com/mikefarah/yq)                                        | Portable command-line YAML processor.                                                                                                                             |
 | [yt-dlp](https://github.com/yt-dlp/yt-dlp)                                   | Fork of youtube-dl with additional features and fixes                                                                                                             |
-There are 195 tools, use `arkade get NAME` to download one.                                                                                                                                                                                         
+There are 211 tools, use `arkade get NAME` to download one.
 <!-- end of tool list -->
-
-
-> Note to contributors, run `go run . get --format markdown` to generate this list
