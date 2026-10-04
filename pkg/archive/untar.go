@@ -118,13 +118,8 @@ func untar(r io.Reader, dir string, gzip bool, quiet bool) (err error) {
 }
 
 func validRelPath(p string) bool {
-	if p == "" || strings.Contains(p, `\`) || strings.HasPrefix(p, "/") {
+	if p == "" || strings.Contains(p, `\`) || strings.HasPrefix(p, "/") || strings.Contains(p, "../") {
 		return false
-	}
-	for _, part := range strings.Split(p, "/") {
-		if part == ".." {
-			return false
-		}
 	}
 	return true
 }

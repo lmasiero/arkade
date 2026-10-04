@@ -57,19 +57,19 @@ Edit `pkg/get/tools.go` and add a new `Tool` entry. **Reference existing example
 **Key points:**
 - Use `BinaryTemplate` for GitHub releases (simpler)
 - Use `URLTemplate` for custom URLs or non-GitHub sources
-- Supported archive formats: `.tar.gz`, `.zip`, `.tgz`, `.bz2`, `.tar.xz`
+- Supported archive formats: `.tar.gz`, `.zip` (`.tar.xz` is NOT supported)
 - Template variables: `.OS`, `.Arch`, `.Name`, `.Version`, `.VersionNumber`, `.Repo`, `.Owner`
 - Windows detection: `HasPrefix .OS "ming"`
 - **CRITICAL**: If a binary is missing for a specific OS/arch (e.g., Windows amd64), the template must still generate a URL that results in a 404 error, NOT download the wrong binary (e.g., don't download Linux binary when Windows was requested)
 
 #### Archive tools: when the binary name inside the archive differs from the tool name
 
-When a tool is distributed as an archive (`.tar.gz`, `.tgz`, `.zip`, `.bz2`, `.tar.xz`) and the **binary inside the archive** has a platform-specific name (e.g., `mytool-darwin-arm64` rather than just `mytool`), you **must** use both `URLTemplate` and `BinaryTemplate` together:
+When a tool is distributed as an archive (`.tar.gz`, `.tgz`, `.zip`) and the **binary inside the archive** has a platform-specific name (e.g., `mytool-darwin-arm64` rather than just `mytool`), you **must** use both `URLTemplate` and `BinaryTemplate` together:
 
 - **`URLTemplate`** — the full download URL including the archive extension (e.g., `https://github.com/.../mytool-darwin-arm64.tgz`)
 - **`BinaryTemplate`** — the name of the **binary inside the archive**, without the archive extension (e.g., `mytool-darwin-arm64`)
 
-**Do NOT** put the archive filename (with `.tgz`/`.tar.gz`/`.zip`/`.bz2`/`.tar.xz` extension) in `BinaryTemplate` alone. The `decompress()` function in `pkg/get/download.go` uses `BinaryTemplate` to locate the extracted binary. If `BinaryTemplate` contains an archive extension, decompress falls back to `tool.Name` which will be wrong when the inner binary has a platform suffix.
+**Do NOT** put the archive filename (with `.tgz`/`.tar.gz`/`.zip` extension) in `BinaryTemplate` alone. The `decompress()` function in `pkg/get/download.go` uses `BinaryTemplate` to locate the extracted binary. If `BinaryTemplate` contains an archive extension, decompress falls back to `tool.Name` which will be wrong when the inner binary has a platform suffix.
 
 **Reference example**: `inletsctl` in `pkg/get/tools.go` — uses `URLTemplate` for the download URL and `BinaryTemplate` for the inner binary name.
 
@@ -124,30 +124,6 @@ To update:
 
 Replace everything between `<!-- start of tool list -->` and `<!-- end of tool list -->` (inclusive of the table rows and tool count line, exclusive of the markers themselves).
 
-**Marker gotcha**: do not splice the README by pre-computed line numbers - they
-drift if the file is edited part-way through. Splice by matching the marker
-strings themselves, in a single pass, and verify afterwards:
-
-```bash
-grep -c "start of tool list\|end of tool list" README.md
-```
-
-This must print `2`. If it prints anything else, fix the file before
-continuing.
-
-**Count line gotcha**: the "There are N tools, use `arkade get NAME` to
-download one." line is emitted by `go run . get --format markdown` as part of
-the table output. Treat it as inside the markers - replace the old count line
-rather than keeping it, or you will end up with duplicates.
-
-**Apostrophe gotcha**: some tool descriptions in `tools.go` contain curly apostrophes (`'` U+2019) instead of straight ASCII ones (`'` U+0027). After updating the README with `go run . get --format markdown`, check for this with:
-
-```bash
-rg -P "\xe2\x80\x99" README.md
-```
-
-If any appear in the table rows, revert those lines to their original content (straight apostrophes) using `git checkout -- README.md` and re-apply only the new tool entry. Never let curly apostrophes into the file.
-
 
 ### Step 6: Create Pull Request
 
@@ -201,7 +177,7 @@ If any appear in the table rows, revert those lines to their original content (s
 - [ ] Required fields: `Name`, `Owner`, `Repo`, `Description`
 - [ ] Either `BinaryTemplate` or `URLTemplate` provided
 - [ ] Supports required OS/arch combinations (Linux amd64/arm64, Darwin amd64/arm64, Windows amd64)
-- [ ] Archive format is `.tar.gz`, `.zip`, `.bz2`, or `.tar.xz`
+- [ ] Archive format is `.tar.gz` or `.zip` (not `.tar.xz`)
 - [ ] Missing OS/arch combinations generate URLs that return 404 (not download wrong binary)
 
 #### Unit Tests (`pkg/get/get_test.go`)
@@ -247,62 +223,8 @@ go test ./pkg/get/... -v
 3. URLs don't match actual GitHub releases
 4. Missing architecture support
 5. Wrong architecture mapping (`arm64` vs `aarch64`, `amd64` vs `x86_64`)
-6. Using unsupported archive format — only `.tar.gz`, `.zip`, `.tgz`, `.bz2`, and `.tar.xz` are supported
+6. Using unsupported archive format (`.tar.xz`)
 7. Template downloads wrong binary when combination is missing (e.g., downloads Linux when Windows requested) - must return 404 instead
-
----
-
-## When to Pin a Tool to a Specific Version
-
-`arkade get` resolves the latest release automatically via the GitHub version
-strategy. Set the `Version` field on a `Tool` only when auto-resolution would
-break the download. Typical cases:
-
-- The latest release ships **no binaries** (only source archives), e.g.
-  kube-burner v2.8.2, grafana-agent v0.44.3.
-- The upstream repo is not a normal GitHub release source, so the URL needs a
-  specific tag.
-- The latest tag does not follow the asset naming the template relies on.
-
-**Every pin MUST carry a terse justification in a comment directly above the
-`Version` field**, following the existing style:
-
-```go
-// v0.44.3 (latest) has no binaries, only source archives, so pinned at v0.44.2.
-Version: "v0.44.2",
-```
-
-The comment MUST also:
-- **Reference the upstream issue + URL** when a pin is raised because of an
-  upstream problem (e.g. a broken release), so a future agent can track it.
-- **State whether the pin is expected to be `transient` or `permanent`.** A
-  `transient` pin is one upstream is expected to fix (e.g. binaries restored in
-  a later release) - revisit it periodically to see if it can be dropped. A
-  `permanent` pin is one that will never change (e.g. the upstream tag naming
-  does not follow the template) - this is a hint **not** to keep revisiting it.
-
-Example of a transient pin raised against upstream:
-
-```go
-// Pinned to v2.8.1, transient: v2.8.2 (latest) ships no binaries.
-// Upstream issue kube-burner/kube-burner#1296
-// https://github.com/kube-burner/kube-burner/issues/1296
-// Unpin once binaries are restored.
-Version: "v2.8.1",
-```
-
-Without a comment, a future agent has no way to know whether the pin is still
-needed. When checking whether a transient pin can be removed, fetch the latest
-release assets (HTML API) and confirm the binaries now exist under the pinned
-version's naming before dropping the `Version` field and its comment. Do not
-revisit permanent pins.
-
-## Commenting on Upstream Repos
-
-When a pin is raised against an upstream problem, you may offer to file an
-issue/comment on their repo on the user's behalf - but only ever do so with
-**explicit authorization from the user**, and confirm the wording with them
-first. Do not post anything upstream unprompted.
 
 ---
 

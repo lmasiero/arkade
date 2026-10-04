@@ -56,9 +56,6 @@ func computeDescriptor(ia IndexAddendum) (*v1.Descriptor, error) {
 	if ia.Data != nil {
 		desc.Data = ia.Data
 	}
-	if ia.ArtifactType != "" {
-		desc.ArtifactType = ia.ArtifactType
-	}
 
 	return desc, nil
 }

@@ -9,7 +9,6 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -23,6 +22,7 @@ import (
 const GitHubVersionStrategy = "github"
 const GitLabVersionStrategy = "gitlab"
 const k8sVersionStrategy = "k8s"
+const ClaudeStrategy = `claude`
 const AmpStrategy = `amp`
 
 const HashicorpShasumStrategy = `hashicorp-sha`
@@ -61,11 +61,6 @@ func retryWithBackoff(fn func() (string, error), maxRetries int, initialBackoff 
 }
 
 func isPermanentError(err error) bool {
-	var urlErr *url.Error
-	if errors.As(err, &urlErr) && urlErr.Op == "parse" {
-		return true
-	}
-
 	// 404, 429 are permanent errors
 	if strings.Contains(err.Error(), "404") {
 		return true
@@ -142,8 +137,13 @@ var releaseLocations = map[string]ReleaseLocation{
 		Timeout: time.Second * 10,
 		Method:  http.MethodGet,
 	},
+	ClaudeStrategy: {
+		Url:     "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/latest",
+		Timeout: time.Second * 5,
+		Method:  http.MethodGet,
+	},
 	AmpStrategy: {
-		Url:     "https://static.ampcode.com/cli/cli-version.txt",
+		Url:     "https://storage.googleapis.com/amp-public-assets-prod-0/cli/cli-version.txt",
 		Timeout: time.Second * 5,
 		Method:  http.MethodGet,
 	},
@@ -177,9 +177,7 @@ func isArchiveStr(downloadURL string) bool {
 	return strings.HasSuffix(downloadURL, "tar.gz") ||
 		strings.HasSuffix(downloadURL, "zip") ||
 		strings.HasSuffix(downloadURL, "tgz") ||
-		strings.HasSuffix(downloadURL, ".gz") ||
-		strings.HasSuffix(downloadURL, ".bz2") ||
-		strings.HasSuffix(downloadURL, "tar.xz")
+		strings.HasSuffix(downloadURL, ".gz")
 }
 
 // ResolveVersion determines the version for a tool. When version is

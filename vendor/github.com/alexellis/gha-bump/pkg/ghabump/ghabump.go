@@ -119,7 +119,7 @@ func FindWorkflows(target string) ([]string, error) {
 	return files, nil
 }
 
-// ProcessWorkflow parses a workflow and suggests version upgrades.
+// ProcessWorkflow parses a workflow and suggests major version upgrades.
 func ProcessWorkflow(data []byte, client *http.Client, verbose bool) (map[string]string, error) {
 	workflow, err := parseWorkflow(data)
 	if err != nil {
@@ -174,7 +174,7 @@ func ProcessWorkflow(data []byte, client *http.Client, verbose bool) (map[string
 			}
 
 			if len(uses) > 0 {
-				newVer, err := suggestUpgrade(client, uses)
+				newVer, err := suggestMajorUpgrade(client, uses)
 				if err != nil {
 					return nil, err
 				}
@@ -199,23 +199,18 @@ func ApplyReplacements(data []byte, replacements map[string]string) string {
 	return content
 }
 
-// suggestUpgrade suggests the latest version for an action.
-// Floating major tags (e.g. checkout@v4) only move when the major version
-// changes and stay floating, while exact pins (e.g. upload-assets@0.4.1,
-// commonly without a "v" prefix) are bumped to the full latest tag.
-func suggestUpgrade(client *http.Client, uses string) (string, error) {
+// suggestMajorUpgrade suggests the latest major version for an action.
+func suggestMajorUpgrade(client *http.Client, uses string) (string, error) {
 	ownerRepo, currentVer, ok := strings.Cut(uses, "@")
-	if !ok {
+	if !ok || currentVer == "master" {
 		return "", nil
 	}
 	owner, repo, ok := strings.Cut(ownerRepo, "/")
-	if !ok || strings.HasPrefix(ownerRepo, "./") {
+	if !ok {
 		return "", nil
 	}
 
-	oldSemver, err := semver.NewVersion(currentVer)
-	if err != nil {
-		// branch names (main, master) and SHA pins cannot be bumped
+	if !strings.HasPrefix(currentVer, "v") {
 		return "", nil
 	}
 
@@ -224,24 +219,20 @@ func suggestUpgrade(client *http.Client, uses string) (string, error) {
 		return "", err
 	}
 
+	oldSemver, err := semver.NewVersion(currentVer)
+	if err != nil {
+		return "", err
+	}
 	newSemver, err := semver.NewVersion(version)
 	if err != nil {
-		// the upstream's latest tag is not semver, skip
-		return "", nil
+		return "", err
 	}
 
-	if !newSemver.GreaterThan(oldSemver) {
-		return "", nil
+	if newSemver.Major() > oldSemver.Major() {
+		return fmt.Sprintf("v%d", newSemver.Major()), nil
 	}
 
-	if strings.HasPrefix(currentVer, "v") {
-		if newSemver.Major() > oldSemver.Major() {
-			return fmt.Sprintf("v%d", newSemver.Major()), nil
-		}
-		return "", nil
-	}
-
-	return version, nil
+	return "", nil
 }
 
 // getLatestVersion fetches the latest release version from GitHub.

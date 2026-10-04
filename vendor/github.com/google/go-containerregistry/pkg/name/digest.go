@@ -17,8 +17,6 @@ package name
 import (
 	// nolint: depguard
 	_ "crypto/sha256" // Recommended by go-digest.
-	// nolint: depguard
-	_ "crypto/sha512" // Needed for sha512 digests.
 	"encoding"
 	"encoding/json"
 	"strings"
@@ -109,8 +107,13 @@ func NewDigest(name string, opts ...Option) (Digest, error) {
 	}
 	base := parts[0]
 	dig := parts[1]
-	if err := digest.Digest(dig).Validate(); err != nil {
-		return Digest{}, newErrBadName("%s: %s", err, dig)
+	prefix := digest.Canonical.String() + ":"
+	if !strings.HasPrefix(dig, prefix) {
+		return Digest{}, newErrBadName("unsupported digest algorithm: %s", dig)
+	}
+	hex := strings.TrimPrefix(dig, prefix)
+	if err := digest.Canonical.Validate(hex); err != nil {
+		return Digest{}, err
 	}
 
 	tag, err := NewTag(base, opts...)

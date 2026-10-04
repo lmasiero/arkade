@@ -32,9 +32,9 @@ import (
 //
 // TODO(#412): Remove the need for this method.
 func CheckPushPermission(ref name.Reference, kc authn.Keychain, t http.RoundTripper) error {
-	auth, err := authn.Resolve(context.TODO(), kc, ref.Context())
+	auth, err := kc.Resolve(ref.Context().Registry)
 	if err != nil {
-		return fmt.Errorf("resolving authorization for %v failed: %w", ref.Context(), err)
+		return fmt.Errorf("resolving authorization for %v failed: %w", ref.Context().Registry, err)
 	}
 
 	scopes := []string{ref.Scope(transport.PushScope)}
@@ -50,7 +50,7 @@ func CheckPushPermission(ref name.Reference, kc authn.Keychain, t http.RoundTrip
 	// to avoid a roundtrip for spec-compliant registries.
 	w := writer{
 		repo:   ref.Context(),
-		client: &http.Client{Transport: tr, CheckRedirect: checkRedirectSSRF},
+		client: &http.Client{Transport: tr},
 	}
 	loc, _, err := w.initiateUpload(context.Background(), "", "", "")
 	if loc != "" {
@@ -68,5 +68,5 @@ func (w *writer) cancelUpload(loc string) {
 	if err != nil {
 		return
 	}
-	_, _ = w.getClient().Do(req)
+	_, _ = w.client.Do(req)
 }
