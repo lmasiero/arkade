@@ -39,33 +39,9 @@ func TestResolveShortcutImage(t *testing.T) {
 			wantAnonymousAuth: true,
 		},
 		{
-			name:              "kullu shortcut uses anonymous auth",
-			input:             "kullu",
-			wantImage:         "ghcr.io/openfaasltd/kullu",
-			wantAnonymousAuth: true,
-		},
-		{
 			name:              "k3sup-pro shortcut uses anonymous auth",
 			input:             "k3sup-pro",
 			wantImage:         "ghcr.io/openfaasltd/k3sup-pro",
-			wantAnonymousAuth: true,
-		},
-		{
-			name:              "slicer-agent shortcut uses anonymous auth",
-			input:             "slicer-agent",
-			wantImage:         "ghcr.io/openfaasltd/slicer-agent",
-			wantAnonymousAuth: true,
-		},
-		{
-			name:              "signet shortcut uses anonymous auth",
-			input:             "signet",
-			wantImage:         "ghcr.io/openfaasltd/signet",
-			wantAnonymousAuth: true,
-		},
-		{
-			name:              "toilgate shortcut uses anonymous auth",
-			input:             "toilgate",
-			wantImage:         "ghcr.io/openfaasltd/toilgate",
 			wantAnonymousAuth: true,
 		},
 		{

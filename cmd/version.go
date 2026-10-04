@@ -4,7 +4,6 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/alexellis/arkade/pkg"
@@ -18,8 +17,6 @@ func PrintArkadeASCIIArt() {
 }
 
 func MakeVersion() *cobra.Command {
-	var jsonOut bool
-
 	var command = &cobra.Command{
 		Use:          "version",
 		Short:        "Print the version",
@@ -28,39 +25,15 @@ func MakeVersion() *cobra.Command {
 		SilenceUsage: false,
 	}
 
-	command.Flags().BoolVarP(&jsonOut, "json", "j", false, "Output version as JSON")
-
 	command.Run = func(cmd *cobra.Command, args []string) {
-		if jsonOut {
-			out := map[string]string{
-				"version":    pkg.BuildString(),
-				"commit":     "n/a",
-				"build_date": "n/a",
-			}
-			if len(pkg.GitCommit) > 0 {
-				out["commit"] = pkg.GitCommit
-			}
-			if bd := pkg.BuildDateString(); bd != "" {
-				out["build_date"] = bd
-			}
-
-			b, _ := json.MarshalIndent(out, "", "  ")
-			fmt.Println(string(b))
-			return
-		}
 
 		PrintArkadeASCIIArt()
-		commit := "n/a"
-		if len(pkg.GitCommit) > 0 {
-			commit = pkg.GitCommit
+		if len(pkg.Version) == 0 {
+			fmt.Println("Version: dev")
+		} else {
+			fmt.Println("Version:", pkg.Version)
 		}
-		bd := "n/a"
-		if buildDate := pkg.BuildDateString(); buildDate != "" {
-			bd = buildDate
-		}
-		fmt.Printf("  commit:  %s\n", commit)
-		fmt.Printf("  version: %s\n", pkg.BuildString())
-		fmt.Printf("  build date: %s\n", bd)
+		fmt.Println("Git Commit:", pkg.GitCommit)
 
 		fmt.Println("\n", aec.Bold.Apply(pkg.SupportMessageShort))
 	}

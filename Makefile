@@ -1,11 +1,6 @@
-Version := $(shell git describe --tags --abbrev=0 2>/dev/null || echo "dev")
-IsDirty := $(if $(shell git status --porcelain),-dirty,)
+Version := $(shell git describe --tags --dirty)
 GitCommit := $(shell git rev-parse HEAD)
-BuildTimestamp := $(shell date +%s)
-LDFLAGS := "-s -w \
-	-X github.com/lmasiero/arkade/pkg.Version=$(Version)$(IsDirty) \
-	-X github.com/lmasiero/arkade/pkg.GitCommit=$(GitCommit) \
-	-X github.com/lmasiero/arkade/pkg.BuildTimestamp=$(BuildTimestamp)"
+LDFLAGS := "-s -w -X github.com/lmasiero/arkade/pkg.Version=$(Version) -X github.com/lmasiero/arkade/pkg.GitCommit=$(GitCommit)"
 PLATFORM := $(shell ./hack/platform-tag.sh)
 SOURCE_DIRS = cmd pkg main.go
 export GO111MODULE=on
@@ -15,7 +10,7 @@ all: gofmt test build dist hash
 
 .PHONY: build
 build:
-	CGO_ENABLED=0 go build -ldflags $(LDFLAGS)
+	go build
 
 .PHONY: gofmt
 gofmt:

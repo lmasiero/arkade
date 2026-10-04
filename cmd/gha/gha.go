@@ -27,19 +27,12 @@ func MakeGHA() *cobra.Command {
 func MakeBump() *cobra.Command {
 	var command = &cobra.Command{
 		Use:     "bump",
-		Short:   "Upgrade actions in GitHub Actions workflow files to the latest versions",
+		Short:   "Upgrade actions in GitHub Actions workflow files to the latest major version",
 		Aliases: []string{"u"},
-		Long: `Upgrade actions in GitHub Actions workflow files to the latest version.
+		Long: `Upgrade actions in GitHub Actions workflow files to the latest major version.
 
 Processes all workflow YAML files in .github/workflows/ or a single file.
-Floating major tags are bumped per major version (e.g. actions/checkout@v3
-to actions/checkout@v4) and stay floating. Exact pins, including tags
-without a "v" prefix, are bumped to the full latest release (e.g.
-alexellis/upload-assets@0.4.1 to 0.5.0).
-
-Only versioned tags can be bumped. If an action is pinned to @master or
-@main, move it onto a tag once (e.g. checkout@v1) and bump will keep it
-current from then on.
+Only bumps major versions (e.g. actions/checkout@v3 to actions/checkout@v4).
 `,
 		Example: `  # Upgrade all workflows in the current directory
   arkade gha bump

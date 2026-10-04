@@ -44,7 +44,6 @@ func Export(img v1.Image, w io.Writer) error {
 			if err != nil {
 				return err
 			}
-			defer rc.Close()
 			_, err = io.Copy(w, rc)
 			return err
 		}
